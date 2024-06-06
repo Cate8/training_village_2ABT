@@ -3,13 +3,13 @@ import json
 import random
 import sys
 
+from village.app.data import data
 from village.classes.task import Task
 from village.pybpodapi.protocol import Bpod
 
 # find python files in the same folder
 sys.path.append(".")
 from trial_plotter import TrialPlotter
-from utils import valve_ml_to_s
 from virtual_mouse import VirtualMouse
 
 
@@ -61,9 +61,20 @@ class FollowTheLight(Task):
         # Change the light of the middle port to the minimum to indicate start of poke
         self.middle_port_output = [(Bpod.OutputChannels.PWM2, 1)]
 
+        # Define what happens if the mouse withdraws the head from the middle port too early
+        self.early_withdrawal_state = 'ready_to_initiate'
+
         # Time the animal has to choose a side port
         self.timer_for_response = self.task_settings["timer_for_response"] / self.speed
-        self.valve_opening_time = valve_ml_to_s(self.task_settings["reward_amount_ml"]) / self.speed
+        # Time the valve needs to open to deliver the reward amount
+        # Make sure to calibrate the valve before using it, otherwise this function
+        # will return the default value of 0.01 seconds
+        self.left_valve_opening_time = data.water_calibration.get_valve_time(
+            port=1, volume=self.task_settings["reward_amount_ml"]
+            )
+        self.right_valve_opening_time = data.water_calibration.get_valve_time(
+            port=3, volume=self.task_settings["reward_amount_ml"]
+            )
 
         # determine if punishment is needed
         if self.task_settings["punishment"]:
@@ -79,6 +90,13 @@ class FollowTheLight(Task):
 
         ## initiate other variables that will be updated every trial
         self.start_of_trial_transition = None
+        self.this_trial_type = None
+        self.middle_port_hold_timer = None
+        self.stimulus_state_output = None
+        self.left_poke_action = None
+        self.right_poke_action = None
+        self.valve_opening_time = None
+        self.valve_to_open = None
 
         # start the virtual mouse if it is a class VirtualMouse
         if type(self.virtual_mouse) == VirtualMouse:
@@ -121,8 +139,6 @@ class FollowTheLight(Task):
         # Adjust as you want the timer that the mouse has to hold the head in the middle port
         # For example, you could keep increasing this with each correct trial
         self.middle_port_hold_timer = self.task_settings["middle_port_hold_time"] / self.speed
-        # Define what happens if the mouse withdraws the head from the middle port too early
-        self.early_withdrawal_state = 'ready_to_initiate'
 
         ## Stimulus states
         self.stimulus_state_output = []
@@ -131,6 +147,7 @@ class FollowTheLight(Task):
                 self.stimulus_state_output.append((Bpod.OutputChannels.PWM1,
                                                    self.task_settings["side_port_light_intensity"]))
                 self.left_poke_action = 'reward_state'
+                self.valve_opening_time = self.left_valve_opening_time
                 self.right_poke_action = self.punish_condition
                 self.valve_to_open = 1
             case "right":
@@ -138,6 +155,7 @@ class FollowTheLight(Task):
                                                    self.task_settings["side_port_light_intensity"]))
                 self.left_poke_action = self.punish_condition
                 self.right_poke_action = 'reward_state'
+                self.valve_opening_time = self.right_valve_opening_time
                 self.valve_to_open = 4
         
         # assemble the state machine
