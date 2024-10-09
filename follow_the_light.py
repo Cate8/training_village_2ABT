@@ -11,6 +11,8 @@ sys.path.append(".")
 from trial_plotter import TrialPlotter
 from virtual_mouse import VirtualMouse
 
+from pathlib import Path
+
 
 class FollowTheLight(Task):
     def __init__(self):
@@ -44,7 +46,11 @@ class FollowTheLight(Task):
     def start(self):
 
         # get parameters from the settings
-        with open("follow_the_light_settings.json") as f:
+        script_path = Path(__file__).resolve()
+        script_dir = script_path.parent
+        path = Path(script_dir, "follow_the_light_settings.json")
+
+        with open(path) as f:
             self.task_settings = json.load(f)
 
         ## Initiate variables that will be used in the task and won't change
