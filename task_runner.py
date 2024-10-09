@@ -10,7 +10,7 @@ def main():
     ftl_task = FollowTheLight()
 
     # Set the number of trials
-    ftl_task.number_of_trials = 100
+    ftl_task.maximum_number_of_trials = 100
 
     # Activate a virtual mouse and let it know about the bpod
     ftl_task.virtual_mouse = VirtualMouse(ftl_task.bpod)
@@ -18,7 +18,7 @@ def main():
     ftl_task.virtual_mouse.learning_rate = 0.005
 
     # Increase the speed of the task and virtual mouse
-    SPEED = 50
+    SPEED = 500
     ftl_task.speed = SPEED
     ftl_task.virtual_mouse.speed = SPEED
 

@@ -1,13 +1,11 @@
 import time
 
 import numpy as np
-from village.pybpodapi.protocol import Bpod
 
 
 class VirtualMouse:
     def __init__(self, my_bpod):
         self.my_bpod = my_bpod
-        # self.bpod = Bpod()
         self.trial_limit = 200
         self.trial_number_counter = 0
         self.performance = 0.5
@@ -16,17 +14,11 @@ class VirtualMouse:
 
     def portX_in(self, port_number):
         # somehow it has to poke out first for this to work
-        self.my_bpod.manual_override(
-            Bpod.ChannelTypes.INPUT, "Port", channel_number=port_number, value=0
-        )
-        self.my_bpod.manual_override(
-            Bpod.ChannelTypes.INPUT, "Port", channel_number=port_number, value=1
-        )
+        self.my_bpod.manual_override_input("Port" + str(port_number) + "Out")
+        self.my_bpod.manual_override_input("Port" + str(port_number) + "In")
 
     def portX_out(self, port_number):
-        self.my_bpod.manual_override(
-            Bpod.ChannelTypes.INPUT, "Port", channel_number=port_number, value=0
-        )
+        self.my_bpod.manual_override_input("Port" + str(port_number) + "Out")
 
     def read_trial_type(self, trial_type):
         self.trial_type = trial_type
