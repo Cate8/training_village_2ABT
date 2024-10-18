@@ -14,6 +14,8 @@ def main():
 
     # Activate a virtual mouse and let it know about the bpod
     ftl_task.virtual_mouse = VirtualMouse(ftl_task.bpod)
+
+    print(ftl_task.virtual_mouse)
     # Change how fast the mouse learns
     ftl_task.virtual_mouse.learning_rate = 0.005
 
@@ -29,7 +31,10 @@ def main():
     subject = Subject("test_subject")
 
     # Run the task
-    ftl_task.test_run(subject)
+    ftl_task.run(subject)
+
+    # Close the bpod and save data
+    ftl_task.disconnect_and_save()
 
 
 if __name__ == "__main__":

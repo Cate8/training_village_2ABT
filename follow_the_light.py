@@ -1,13 +1,11 @@
 import _thread
 import json
 import random
-import sys
 
 from village.data import data
 from village.classes.task import Task, Event, Output
 
 # find python files in the same folder
-sys.path.append(".")
 from trial_plotter import TrialPlotter
 from virtual_mouse import VirtualMouse
 
@@ -31,8 +29,8 @@ class FollowTheLight(Task):
 
         # define total number of trials
         self.maximum_number_of_trials = 10
-        self.minimum_duration = 1800
-        self.maximum_duration = 3600
+        self.minimum_duration = 18
+        self.maximum_duration = 36
 
         # initiate the variable for the virtual mouse
         self.virtual_mouse = None
@@ -44,6 +42,8 @@ class FollowTheLight(Task):
         self.plotter = None
 
     def start(self):
+
+        print("start 0")
 
         # get parameters from the settings
         script_path = Path(__file__).resolve()
@@ -67,6 +67,7 @@ class FollowTheLight(Task):
             Output.SoftCode1,  # sound off
         ]
 
+        print("start 1")
         # Holding state
         # Change the light of the middle port to the minimum to indicate start of poke
         self.middle_port_output = [(Output.PWM2, 1)]
@@ -110,6 +111,7 @@ class FollowTheLight(Task):
         self.valve_opening_time = None
         self.valve_to_open = None
 
+        print("start 2")
         # start the virtual mouse if it is a class VirtualMouse
         if type(self.virtual_mouse) == VirtualMouse:
             print("Engaging virtual mouse...")
@@ -117,6 +119,10 @@ class FollowTheLight(Task):
         # initiate the plotter if it is a class TrialPlotter
         if type(self.plotter) == TrialPlotter:
             print("Engaging plotter...")
+
+        print("start 3")
+        print(type(self.virtual_mouse))
+        print(type(self.plotter))
 
     def configure_gui(self):
         pass
@@ -279,3 +285,9 @@ class FollowTheLight(Task):
             self.plotter.keep_plotting()
             print("Close the plot window to finish the task")
         print("Closing the task")
+
+
+# ftl = FollowTheLight()
+# ftl.run()
+# ftl.close()
+# ftl.disconnect_and_save()
