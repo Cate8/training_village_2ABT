@@ -1,4 +1,3 @@
-import _thread
 import random
 
 from village.classes.task import Event, Output, Task
