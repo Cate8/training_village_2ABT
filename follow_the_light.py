@@ -1,7 +1,7 @@
 import random
 
 from village.classes.task import Event, Output, Task
-from village.data import data
+from village.manager import manager
 
 
 class FollowTheLight(Task):
@@ -20,11 +20,10 @@ class FollowTheLight(Task):
         If the mouse licks the correct side port, it receives a reward.
         If the mouse licks the wrong side port, it receives a punishment.
 
-        It contains 3 training stages:
-        - Training stage 1: Both side ports are illuminated and give reward.
-        - Training stage 2: Only one side port is illuminated and gives reward.
+        It contains 2 training stages:
+        - Training stage 1: Only one side port is illuminated and gives reward.
                             No punishment is given, and the mouse can choose again.
-        - Training stage 3: Both ports are illuminated with different intensity.
+        - Training stage 2: Both ports are illuminated with different intensity.
                             Brighter port gives reward, the other one gives punishment.
         """
 
@@ -32,7 +31,7 @@ class FollowTheLight(Task):
 
     def start(self):
 
-        print("FollowTheLight start")
+        print("FollowTheLight starts")
 
         ## Initiate states that won't change during training
         # Trial start state:
@@ -47,10 +46,10 @@ class FollowTheLight(Task):
         # Time the valve needs to open to deliver the reward amount
         # Make sure to calibrate the valve before using it, otherwise this function
         # will return the default value of 0.01 seconds
-        self.left_valve_opening_time = data.water_calibration.get_valve_time(
+        self.left_valve_opening_time = manager.water_calibration.get_valve_time(
             port=1, volume=self.settings.reward_amount_ml
         )
-        self.right_valve_opening_time = data.water_calibration.get_valve_time(
+        self.right_valve_opening_time = manager.water_calibration.get_valve_time(
             port=3, volume=self.settings.reward_amount_ml
         )
 
@@ -62,6 +61,7 @@ class FollowTheLight(Task):
             self.punish_condition = "stimulus_state"
 
     def configure_gui(self):
+        # TODO: implement this method
         pass
 
     def create_trial(self):

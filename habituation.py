@@ -1,38 +1,30 @@
 import random
 
 from village.classes.task import Event, Output, Task
-from village.data import data
+from village.manager import manager
 
 
-class FollowTheLight(Task):
+class Habituation(Task):
     def __init__(self):
         super().__init__()
 
         self.info = """
 
-        Follow The Light Task
+        Habituation Task
         -------------------
 
         This task is a simple visual task where the mouse has
-        to poke the center port to start a trial.
+        to poke in illuminated ports.
+        The center port illuminates when a trial starts.
         After the center port is poked,
-        one of the two side ports will be illuminated.
-        If the mouse licks the correct side port, it receives a reward.
-        If the mouse licks the wrong side port, it receives a punishment.
-
-        It contains 3 training stages:
-        - Training stage 1: Both side ports are illuminated and give reward.
-        - Training stage 2: Only one side port is illuminated and gives reward.
-                            No punishment is given, and the mouse can choose again.
-        - Training stage 3: Both ports are illuminated with different intensity.
-                            Brighter port gives reward, the other one gives punishment.
+        both side ports are illuminated and give reward.
         """
 
         # variables are defined in training_settings.py
 
     def start(self):
 
-        print("FollowTheLight start")
+        print("Habituation starts")
 
         ## Initiate states that won't change during training
         # Trial start state:
@@ -47,22 +39,16 @@ class FollowTheLight(Task):
         # Time the valve needs to open to deliver the reward amount
         # Make sure to calibrate the valve before using it, otherwise this function
         # will return the default value of 0.01 seconds
-        self.left_valve_opening_time = data.water_calibration.get_valve_time(
+        self.left_valve_opening_time = manager.water_calibration.get_valve_time(
             port=1, volume=self.settings.reward_amount_ml
         )
-        self.right_valve_opening_time = data.water_calibration.get_valve_time(
+        self.right_valve_opening_time = manager.water_calibration.get_valve_time(
             port=3, volume=self.settings.reward_amount_ml
         )
 
-        # determine if punishment will be used
-        if self.settings.punishment:
-            self.punish_condition = "punish_state"
-        else:
-            # if no punishment is used, let the mouse choose again
-            self.punish_condition = "stimulus_state"
-
-    def configure_gui(self):
-        pass
+        # use maximum light intensity for both side ports
+        self.light_intensity_left = self.settings.side_port_light_intensities[2]
+        self.light_intensity_right = self.settings.side_port_light_intensities[2]
 
     def create_trial(self):
         """
@@ -79,42 +65,6 @@ class FollowTheLight(Task):
             self.start_of_trial_transition = "close_door"
         else:
             self.start_of_trial_transition = "ready_to_initiate"
-
-        ## Define the conditions for the trial
-        # pick a trial type at random.
-        self.this_trial_type = random.choice(self.settings.trial_types)
-
-        ## Set the variables for the stimulus states and the possible choices
-        self.stimulus_state_output = []
-        match self.this_trial_type:
-            case "both_ports_on":
-                self.light_intensity_left = self.settings.side_port_light_intensities[2]
-                self.light_intensity_right = self.settings.side_port_light_intensities[2]
-                self.left_poke_action = "reward_state"
-                # This is a bit shitty as I have to create two reward states
-                # TODO: Create a habituation task to exemplify that posibility also
-            case "left_easy":
-                self.stimulus_state_output.append(
-                    (
-                        Output.PWM1,
-                        self.task_settings["side_port_light_intensity"],
-                    )
-                )
-                self.left_poke_action = "reward_state"
-                self.valve_opening_time = self.left_valve_opening_time
-                self.right_poke_action = self.punish_condition
-                self.valve_to_open = Output.Valve1
-            case "right_easy":
-                self.stimulus_state_output.append(
-                    (
-                        Output.PWM3,
-                        self.task_settings["side_port_light_intensity"],
-                    )
-                )
-                self.left_poke_action = self.punish_condition
-                self.right_poke_action = "reward_state"
-                self.valve_opening_time = self.right_valve_opening_time
-                self.valve_to_open = Output.Valve4
 
         # assemble the state machine
         self.assemble_state_machine()
@@ -133,8 +83,8 @@ class FollowTheLight(Task):
             state_name="close_door",
             state_timer=0,
             state_change_conditions={Event.Tup: "ready_to_initiate"},
-            output_actions=[Output.SoftCode20],
-            # TODO: change this softcode to a default one
+            output_actions=[Output.SoftCode1],
+            # Output.SoftCode1 is used to close the door
         )
 
         # 'ready_to_initiate' state that waits for the poke in the middle port
@@ -145,13 +95,13 @@ class FollowTheLight(Task):
             output_actions=self.ready_to_initiate_output,
         )
 
+        # 'stimulus_state' state that turns on the side ports and waits for a poke
         self.bpod.add_state(
             state_name="stimulus_state",
-            state_timer=self.settings.timer_for_response,
+            state_timer=0,
             state_change_conditions={
-                Event.Port1In: self.left_poke_action,
-                Event.Port3In: self.right_poke_action,
-                Event.Tup: "exit",
+                Event.Port1In: "reward_state_left",
+                Event.Port3In: "reward_state_right",
             },
             output_actions=[
                 (Output.PWM1,self.light_intensity_left),
@@ -159,31 +109,26 @@ class FollowTheLight(Task):
             ],
         )
 
+        # reward_state_left and reward_state_right are the states that deliver the reward
         self.bpod.add_state(
-            state_name="reward_state",
-            state_timer=self.valve_opening_time,
+            state_name="reward_state_left",
+            state_timer=self.left_valve_opening_time,
             state_change_conditions={Event.Tup: "iti"},
-            output_actions=[self.valve_to_open],
+            output_actions=[Output.Valve1],
         )
 
         self.bpod.add_state(
-            state_name="punish_state",
-            state_timer=self.settings.punishment_time,
-            state_change_conditions={Event.Tup: "iti"},
-            output_actions=[],
-        )
-
-        # iti is the time that the mouse has to wait before the next trial
-        self.bpod.add_state(
-            state_name="iti",
-            state_timer=self.settings.iti,
+            state_name="reward_state_right",
+            state_timer=self.right_valve_opening_time,
             state_change_conditions={Event.Tup: "exit"},
-            output_actions=[],
+            output_actions=[Output.Valve3],
         )
 
     def after_trial(self):
-        pass
-
+        # register the amount of water given to the mouse in this trial
+        # do not delete this variable, it is used to calculate the water consumption
+        # and trigger alarms. You can override the alarms in the GUI
+        self.bpod.register_value("water", self.self.settings.reward_amount_ml)
 
     def close(self):
-        print("Closing the task")
+        print("Closing Habituation task")
