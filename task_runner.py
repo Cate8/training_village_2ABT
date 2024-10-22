@@ -31,7 +31,7 @@ def main():
     subject = Subject("test_subject")
 
     # Run the task
-    ftl_task.run(subject)
+    ftl_task.run()
 
     # Close the bpod and save data
     ftl_task.disconnect_and_save()
