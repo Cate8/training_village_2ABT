@@ -47,8 +47,8 @@ class Habituation(Task):
         )
 
         # use maximum light intensity for both side ports
-        self.light_intensity_left = self.settings.side_port_light_intensities[2]
-        self.light_intensity_right = self.settings.side_port_light_intensities[2]
+        self.light_intensity_left = self.settings.side_port_light_intensities[-1]
+        self.light_intensity_right = self.settings.side_port_light_intensities[-1]
 
     def create_trial(self):
         """
@@ -128,7 +128,7 @@ class Habituation(Task):
         # register the amount of water given to the mouse in this trial
         # do not delete this variable, it is used to calculate the water consumption
         # and trigger alarms. You can override the alarms in the GUI
-        self.bpod.register_value("water", self.self.settings.reward_amount_ml)
+        self.bpod.register_value("water", self.settings.reward_amount_ml)
 
     def close(self):
         print("Closing Habituation task")

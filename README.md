@@ -1,2 +1,2 @@
-# follow-the-light-task
-demo task to use with the mouse village
+# Demo tasks and training protocols
+demo tasks to use with the training village
