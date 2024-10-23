@@ -1,4 +1,4 @@
-from village.classes.task import Task, Event, Output
+from village.classes.task import Event, Output, Task
 
 
 class Simple(Task):
@@ -16,8 +16,6 @@ class Simple(Task):
     def start(self):
         self.hola = True
         print("start")
-        print(self.settings.delay)
-        print(self.settings.mylist)
         print(self.settings.next_task)
 
     def create_trial(self):
