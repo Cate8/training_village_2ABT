@@ -60,7 +60,7 @@ class Habituation(Task):
         ## Start the task
         # On the first trial, the entry door to the behavioral box gets closed.
         # This is coded as a transition in the 'close_door' state.
-        if self.current_trial == 0:
+        if self.current_trial == 1:
             # Close the door
             self.start_of_trial_transition = "close_door"
         else:

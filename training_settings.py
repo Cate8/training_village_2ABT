@@ -55,7 +55,7 @@ class TrainingSettings(Training):
         self.settings.punishment = False
         self.settings.punishment_time = 1
         self.settings.trial_types = ["left_easy", "right_easy"]
-        self.settings.side_port_light_intensities = [0, 100, 200]
+        self.settings.side_port_light_intensities = [100, 200]
 
     def update_training_settings(self) -> None:
         """

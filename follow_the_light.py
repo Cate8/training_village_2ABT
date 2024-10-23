@@ -76,7 +76,7 @@ class FollowTheLight(Task):
         ## Start the task
         # On the first trial, the entry door to the behavioral box gets closed.
         # This is coded as a transition in the 'close_door' state.
-        if self.current_trial == 0:
+        if self.current_trial == 1:
             # Close the door
             self.start_of_trial_transition = "close_door"
         else:
@@ -87,30 +87,33 @@ class FollowTheLight(Task):
         self.this_trial_type = random.choice(self.settings.trial_types)
 
         ## Set the variables for the stimulus states and the possible choices
+        # based on the trial type
         self.stimulus_state_output = []
-        match self.this_trial_type:
-            case "left_easy":
+        if "left" in self.this_trial_type:
+            self.stimulus_state_output.append(
+                (Output.PWM1, self.settings.side_port_light_intensities[-1])
+            )
+            if "hard" in self.this_trial_type:
                 self.stimulus_state_output.append(
-                    (
-                        Output.PWM1,
-                        self.settings.side_port_light_intensities[-1],
-                    )
+                    (Output.PWM3, self.settings.side_port_light_intensities[0])
                 )
-                self.left_poke_action = "reward_state"
-                self.valve_opening_time = self.left_valve_opening_time
-                self.right_poke_action = self.punish_condition
-                self.valve_to_open = Output.Valve1
-            case "right_easy":
+            self.left_poke_action = "reward_state"
+            self.valve_to_open = Output.Valve1
+            self.valve_opening_time = self.left_valve_opening_time
+            self.right_poke_action = self.punish_condition
+
+        elif "right" in self.this_trial_type:
+            self.stimulus_state_output.append(
+                (Output.PWM3, self.settings.side_port_light_intensities[-1])
+            )
+            if "hard" in self.this_trial_type:
                 self.stimulus_state_output.append(
-                    (
-                        Output.PWM3,
-                        self.settings.side_port_light_intensities[-1],
-                    )
+                    (Output.PWM1, self.settings.side_port_light_intensities[0])
                 )
-                self.left_poke_action = self.punish_condition
-                self.right_poke_action = "reward_state"
-                self.valve_opening_time = self.right_valve_opening_time
-                self.valve_to_open = Output.Valve3
+            self.left_poke_action = self.punish_condition
+            self.right_poke_action = "reward_state"
+            self.valve_to_open = Output.Valve3
+            self.valve_opening_time = self.right_valve_opening_time
 
         # assemble the state machine
         self.assemble_state_machine()
@@ -129,8 +132,7 @@ class FollowTheLight(Task):
             state_name="close_door",
             state_timer=0,
             state_change_conditions={Event.Tup: "ready_to_initiate"},
-            output_actions=[Output.SoftCode20],
-            # TODO: change this softcode to a default one
+            output_actions=[Output.SoftCode1],
         )
 
         # 'ready_to_initiate' state that waits for the poke in the middle port
@@ -194,59 +196,53 @@ class FollowTheLight(Task):
         """
         This method calculates the performance of a trial, comparing the trial type
         to the first port that the mouse poked.
+        You can access the trial information in self.trial_data
         """
-        # TODO: get the port that the mouse poked first
-        print("here")
-        print("there")
-
-        return True
-
-
-# for testing
-if __name__ == "__main__":
-    import time
-    task = FollowTheLight()
-    task.settings.next_task = "Habituation"
-    task.settings.refractary_period = 14400
-    task.settings.minimum_duration = 600
-    task.settings.maximum_duration = 3600
-    task.settings.maximum_number_of_trials = 1000
-
-    # Settings in this block are dependent on each task,
-    # and the user needs to create and define them here
-    task.settings.middle_port_light_intensity = 50
-    task.settings.timer_for_response = 5
-    task.settings.iti = 1
-    task.settings.reward_amount_ml = 5
-    task.settings.punishment = False
-    task.settings.punishment_time = 1
-    task.settings.trial_types = ["left_easy", "right_easy"]
-    task.settings.side_port_light_intensities = [0, 100, 200]
-
-    task.subject = "test"
-    task.start()
-    print("1")
-    task.bpod.create_state_machine()
-    print("2")
-    task.create_trial()
-    print("3")
-    task.bpod.send_and_run_state_machine()
-    print("4")
-    time.sleep(1)
-    # poke in the middle port
-    # task.bpod.manual_override_input("Port2Out")
-    task.bpod.manual_override_input("Port2In")
-    task.bpod.manual_override_input("Port2Out")
-    # poke in the left port
-    # task.bpod.manual_override_input("Port1Out")
-    task.bpod.manual_override_input("Port1In")
-    task.bpod.manual_override_input("Port1Out")
-    # wait .5 seconds
-    time.sleep(0.5)
-    # poke in the right port
-    # task.bpod.manual_override_input("Port3Out")
-    task.bpod.manual_override_input("Port3In")
-    task.bpod.manual_override_input("Port3Out")
+        # get the side port that the mouse poked first
+        first_poke = self.find_first_occurrence(
+            self.trial_data["ordered_list_of_events"],
+            ["Port1In", "Port3In"],
+        )
+        # check if the mouse poked the correct port
+        if first_poke == "Port1In" and "left" in self.this_trial_type:
+            return True
+        elif first_poke == "Port3In" and "right" in self.this_trial_type:
+            return True
+        else:
+            return False
+        
+    def find_first_occurrence(self, event_list, targets):
+        for event in event_list:
+            if event in targets:
+                return event
+        return "NaN"
 
 
-    task.after_trial()
+# Uncomment below if you want to programatically interact with
+# with your task and bpod. This is useful for debugging and for
+# testing the task.
+
+# if __name__ == "__main__":
+#     import time
+
+#     from training_settings import TrainingSettings
+
+#     task = FollowTheLight()
+#     training = TrainingSettings()
+#     training.default_training_settings()
+#     task.settings = training.settings
+
+#     task.run_one_trial_in_thread()
+#     time.sleep(.5)
+#     # poke in the middle port
+#     task.bpod.manual_override_input("Port2In")
+#     task.bpod.manual_override_input("Port2Out")
+#     # poke in the left port
+#     task.bpod.manual_override_input("Port1In")
+#     task.bpod.manual_override_input("Port1Out")
+#     time.sleep(0.1)
+#     # poke in the right port
+#     task.bpod.manual_override_input("Port3In")
+#     task.bpod.manual_override_input("Port3Out")
+#     # leave enough time for the bpod to finish
+#     time.sleep(2)
