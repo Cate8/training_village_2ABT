@@ -14,15 +14,11 @@ class Simple(Task):
         """
 
     def start(self):
-        self.hola = True
         print("start")
         print(self.settings.next_task)
 
     def create_trial(self):
-
-        self.delay = 2
-        self.settings.delay = 3
-
+        print("creating trial")
         self.bpod.add_state(
             state_name="one",
             state_timer=1,
