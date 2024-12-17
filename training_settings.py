@@ -15,13 +15,12 @@ class TrainingSettings(Training):
     must be defined.
     When a new subject is created, a new row is added to the data/subjects.csv file,
     with these variables and its values.
-    
+
     The following variables are needed:
     - self.next_task
     - self.refractary_period
     - self.minimum_duration
     - self.maximum_duration
-    - self.maximum_number_of_trials
     In addition to these variables, all the necessary variables to modify the state
     of the tasks can be included.
 
@@ -44,7 +43,6 @@ class TrainingSettings(Training):
         self.settings.refractary_period = 14400
         self.settings.minimum_duration = 600
         self.settings.maximum_duration = 3600
-        self.settings.maximum_number_of_trials = 1000
 
         # Settings in this block are dependent on each task,
         # and the user needs to create and define them here
@@ -79,9 +77,13 @@ class TrainingSettings(Training):
         total_sessions = len(self.df.session.unique())
 
         # define when to change tasks
-        if self.settings.next_task == "Habituation" and total_trials > 100 and total_sessions >= 2:
+        if (
+            self.settings.next_task == "Habituation"
+            and total_trials > 100
+            and total_sessions >= 2
+        ):
             self.settings.next_task = "FollowTheLight"
-        
+
         # decrease the reward amount at the beginning of training
         match total_sessions:
             case 0:
@@ -98,18 +100,30 @@ class TrainingSettings(Training):
                 self.settings.reward_amount_ml = 2
 
         # logic to promote the animal to the second training stage:
-        is_animal_in_hardest_stage = any(item in self.df.trial_type.unique() for item in ["left_hard", "right_hard"])
+        is_animal_in_hardest_stage = any(
+            item in self.df.trial_type.unique() for item in ["left_hard", "right_hard"]
+        )
         if total_sessions >= 2 and not is_animal_in_hardest_stage:
             last_session_performance = self.get_session_performance(total_sessions)
-            previous_session_performance = self.get_session_performance(total_sessions - 1)
-            if last_session_performance >= 0.85 and previous_session_performance >= 0.85:
+            previous_session_performance = self.get_session_performance(
+                total_sessions - 1
+            )
+            if (
+                last_session_performance >= 0.85
+                and previous_session_performance >= 0.85
+            ):
                 # introduce punishment
                 self.settings.punishment = True
                 # change the trial types
-                self.settings.trial_types = ["left_easy", "right_easy", "left_hard", "right_hard"]
+                self.settings.trial_types = [
+                    "left_easy",
+                    "right_easy",
+                    "left_hard",
+                    "right_hard",
+                ]
 
         return None
-    
+
     def get_session_performance(self, session: int) -> float:
         """
         This method calculates the performance of a session.
@@ -117,11 +131,13 @@ class TrainingSettings(Training):
 
         return self.df[self.df.session == session].correct.mean()
 
+
 # for debugging purposes
 if __name__ == "__main__":
     import random
 
     import pandas as pd
+
     training = TrainingSettings()
     dfdir = "/home/pi/Downloads/B15.csv"
     training.df = pd.read_csv(dfdir, sep=";")
