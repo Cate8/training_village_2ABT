@@ -180,14 +180,14 @@ class FollowTheLight(Task):
         # register the amount of water given to the mouse in this trial
         # do not delete this variable, it is used to calculate the water consumption
         # and trigger alarms. You can override the alarms in the GUI
-        self.bpod.register_value("water", self.settings.reward_amount_ml)
+        self.register_value("water", self.settings.reward_amount_ml)
 
         # we will also record the trial type, which will be used by training_settings.py
         # to make sure that the animal does not go from the second stage to the first one
-        self.bpod.register_value("trial_type", self.this_trial_type)
+        self.register_value("trial_type", self.this_trial_type)
 
         # we will also record if the trial was correct or not
-        self.bpod.register_value("correct", self.get_performance_of_trial())
+        self.register_value("correct", self.get_performance_of_trial())
 
     def close(self):
         print("Closing the task")
