@@ -113,7 +113,7 @@ class Habituation(Task):
         self.bpod.add_state(
             state_name="reward_state_left",
             state_timer=self.left_valve_opening_time,
-            state_change_conditions={Event.Tup: "iti"},
+            state_change_conditions={Event.Tup: "exit"},
             output_actions=[Output.Valve1],
         )
 

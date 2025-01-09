@@ -50,3 +50,19 @@ class Simple(Task):
 
     def close(self):
         print("close")
+
+
+
+if __name__ == "__main__":
+    import time
+
+    import pandas as pd
+    from matplotlib import pyplot as plt
+
+    from training_settings import TrainingSettings
+
+    task = Simple()
+    rdf = pd.read_csv("/home/pi/village_projects/demo_project/data/sessions/test/test_Simple_20250108_123325_RAW.csv", sep=";")
+    df = task.transform(rdf)
+    df.plot(x="TRIAL_START", y="trial", kind="scatter")
+    plt.show()

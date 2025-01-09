@@ -72,13 +72,18 @@ class TrainingSettings(Training):
         # self.df object contains all data from training for a particular subject
         # self.settings contains the settings from the last session
 
+        # If the last task is Simple, return none
+        current_task = self.df.iloc[-1].task
+        if current_task == "Simple":
+            return None
+
         # get some information
         total_trials = self.df.shape[0]
         total_sessions = len(self.df.session.unique())
 
         # define when to change tasks
         if (
-            self.settings.next_task == "Habituation"
+            current_task == "Habituation"
             and total_trials > 100
             and total_sessions >= 2
         ):
