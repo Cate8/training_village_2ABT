@@ -55,6 +55,22 @@ class TrainingSettings(Training):
         self.settings.trial_types = ["left_easy", "right_easy"]
         self.settings.side_port_light_intensities = [100, 200]
 
+        self.settings.a = 1
+        self.settings.b = 2
+        self.settings.c = 3
+        self.settings.d = 4
+        self.settings.e = 5
+        self.settings.f = 6
+        self.settings.g = 7
+        self.settings.h = 8
+        self.settings.i = 9
+        self.settings.j = 10
+        self.settings.k = 11
+        self.settings.l = 12
+        self.settings.m = 13
+        self.settings.n = 14
+        self.settings.o = 15
+
     def update_training_settings(self) -> None:
         """
         This method is called every time a session finishes.
@@ -68,6 +84,7 @@ class TrainingSettings(Training):
         Note that in this case, they never go back to the easier task.
         """
         ## You have access to the following variables:
+        # self.task contains the name of the task
         # self.subject contains the name of the mouse
         # self.df object contains all data from training for a particular subject
         # self.settings contains the settings from the last session
@@ -77,11 +94,7 @@ class TrainingSettings(Training):
         total_sessions = len(self.df.session.unique())
 
         # define when to change tasks
-        if (
-            self.settings.next_task == "Habituation"
-            and total_trials > 100
-            and total_sessions >= 2
-        ):
+        if self.task == "Habituation" and total_trials > 100 and total_sessions >= 2:
             self.settings.next_task = "FollowTheLight"
 
         # decrease the reward amount at the beginning of training
