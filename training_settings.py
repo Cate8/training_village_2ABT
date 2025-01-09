@@ -84,14 +84,13 @@ class TrainingSettings(Training):
         Note that in this case, they never go back to the easier task.
         """
         ## You have access to the following variables:
-        # self.task contains the name of the task
+        # self.last_task contains the name of the task that the mouse did last
         # self.subject contains the name of the mouse
         # self.df object contains all data from training for a particular subject
         # self.settings contains the settings from the last session
 
         # If the last task is Simple, return none
-        current_task = self.df.iloc[-1].task
-        if current_task == "Simple":
+        if self.last_task == "Simple":
             return None
 
         # get some information
@@ -99,7 +98,7 @@ class TrainingSettings(Training):
         total_sessions = len(self.df.session.unique())
 
         # define when to change tasks
-        if self.task == "Habituation" and total_trials > 100 and total_sessions >= 2:
+        if self.last_task == "Habituation" and total_trials > 100 and total_sessions >= 2:
             self.settings.next_task = "FollowTheLight"
 
         # decrease the reward amount at the beginning of training
