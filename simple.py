@@ -25,14 +25,14 @@ class Simple(Task):
             state_name="one",
             state_timer=1,
             state_change_conditions={Event.Tup: "two", Event.SoftCode1: "three"},
-            output_actions=[(Output.PWM1, 255), Output.GlobalTimer1Trig],
+            output_actions=[(Output.PWM1, 255), Output.GlobalTimer1Trig, Output.SoftCode2],
         )
 
         self.bpod.add_state(
             state_name="two",
             state_timer=0,
             state_change_conditions={Event.GlobalTimer1Start: "three"},
-            output_actions=[Output.SoftCode33],
+            output_actions=[Output.SoftCode33, (Output.PWM2, 255)],
         )
 
         self.bpod.add_state(
