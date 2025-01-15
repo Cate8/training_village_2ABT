@@ -8,10 +8,13 @@ def plot_side_correct_performance(df: pd.DataFrame, ax: plt.Axes) -> plt.Axes:
     # select only the last 100 trials
     df = df.tail(100)
     sns.scatterplot(data=df, x="trial", y="trial_type", hue="correct", ax=ax)
-    # plot the mean of the last 5 trials
-    ax.plot(pd.Series([int(x) for x in df.correct]).rolling(5).mean(), "r")
+    # make sure the y axis ticks are ascending, inverting the y axis
+    ax.invert_yaxis()
+    # plot the mean of the last 10 trials
+    ax.plot(pd.Series([int(x) for x in df.correct]).rolling(10).mean(), "r")
 
     return ax
+
 
 if __name__ == "__main__":
     df = pd.DataFrame(
