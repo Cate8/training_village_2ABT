@@ -70,6 +70,17 @@ class TrainingSettings(Training):
         self.settings.m = 13
         self.settings.n = 14
         self.settings.o = 15
+        self.settings.p = 16
+        self.settings.q = 17
+        self.settings.r = 18
+        self.settings.s = 19
+        self.settings.t = 20
+        self.settings.u = 21
+        self.settings.v = 22
+        self.settings.w = 23
+        self.settings.x = 24
+        self.settings.y = 25
+        self.settings.z = 26
 
     def update_training_settings(self) -> None:
         """
@@ -140,6 +151,21 @@ class TrainingSettings(Training):
                 ]
 
         return None
+    
+    def define_gui_tabs(self) -> None:
+        """
+        This method is called when the GUI is created.
+        It is used to define the organization of the settings in the GUI.
+        Whatever that is not defined here will be placed in the "General" tab.
+
+        They need to have the same name as your settings variables.
+        """
+        self.gui_tabs = {
+            "Training": ["timer_for_response", "middle_port_light_intensity", "side_port_light_intensities"],
+            "Dummies": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+        }
+
+        # TODO: define possible values for each variable?
 
     def get_session_performance(self, session: int) -> float:
         """
