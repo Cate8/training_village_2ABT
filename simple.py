@@ -46,7 +46,7 @@ class Simple(Task):
         print("after trial")
         # create something to register that changes with each trial
         val = len(self.bpod.session.trials)
-        self.register_value("test", val)
+        self.register_value("total_trials", val)
 
     def close(self):
         print("close")

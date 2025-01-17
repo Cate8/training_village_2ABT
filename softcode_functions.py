@@ -12,7 +12,7 @@ def function1():
 
 def function2():
     start_time = time.time()
-    sound = tone_generator(1, 0.01, 600, 0.005, 192000)
+    sound = tone_generator(1, 0.05, 600, 0.005, 192000)
     sound_device.load(sound)
     end_time = time.time()
     print("load delay: ", end_time - start_time)

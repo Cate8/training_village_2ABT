@@ -222,27 +222,28 @@ class FollowTheLight(Task):
 # with your task and bpod. This is useful for debugging and for
 # testing the task.
 
-# if __name__ == "__main__":
-#     import time
+if __name__ == "__main__":
+    import time
 
-#     from training_settings import TrainingSettings
+    from training_settings import TrainingSettings
 
-#     task = FollowTheLight()
-#     training = TrainingSettings()
-#     training.default_training_settings()
-#     task.settings = training.settings
+    task = FollowTheLight()
+    training = TrainingSettings()
+    training.default_training_settings()
+    task.settings = training.settings
 
-#     task.run_one_trial_in_thread()
-#     time.sleep(.5)
-#     # poke in the middle port
-#     task.bpod.manual_override_input("Port2In")
-#     task.bpod.manual_override_input("Port2Out")
-#     # poke in the left port
-#     task.bpod.manual_override_input("Port1In")
-#     task.bpod.manual_override_input("Port1Out")
-#     time.sleep(0.1)
-#     # poke in the right port
-#     task.bpod.manual_override_input("Port3In")
-#     task.bpod.manual_override_input("Port3Out")
-#     # leave enough time for the bpod to finish
-#     time.sleep(2)
+    task.run_in_thread()
+    time.sleep(5)
+    # poke in the middle port
+    # task.bpod.manual_override_input("Port2In")
+    # task.bpod.manual_override_input("Port2Out")
+    # # poke in the left port
+    # task.bpod.manual_override_input("Port1In")
+    # task.bpod.manual_override_input("Port1Out")
+    # time.sleep(0.1)
+    # # poke in the right port
+    # task.bpod.manual_override_input("Port3In")
+    # task.bpod.manual_override_input("Port3Out")
+    # # leave enough time for the bpod to finish
+    time.sleep(2)
+    task.bpod.close()
