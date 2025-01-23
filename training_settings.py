@@ -166,6 +166,11 @@ class TrainingSettings(Training):
         }
 
         # TODO: define possible values for each variable?
+        self.gui_tabs_restricted = {
+            "side_port_light_intensities": ["Option 1", "Option 2", "Option 3"],
+            # Add more settings and their options here
+        }
+
 
     def get_session_performance(self, session: int) -> float:
         """
