@@ -26,12 +26,6 @@ class Habituation(Task):
 
         print("Habituation starts")
 
-
-        # DELETE ME!! For testing
-        print(self.settings.side_port_light_intensities)
-        print(self.settings.timer_for_response)
-
-
         ## Initiate states that won't change during training
         # Trial start state:
         # Turn on light in the middle port

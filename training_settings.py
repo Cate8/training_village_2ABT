@@ -158,17 +158,22 @@ class TrainingSettings(Training):
         It is used to define the organization of the settings in the GUI.
         Whatever that is not defined here will be placed in the "General" tab.
 
-        They need to have the same name as your settings variables.
+        You can use the 'Hide' tab to hide a setting from the GUI.
+
+        Items in the lists need to have the same name as your settings variables.
+        
+        You can also restrict the possible values for each setting.
         """
         self.gui_tabs = {
             "Training": ["timer_for_response", "middle_port_light_intensity", "side_port_light_intensities"],
-            "Dummies": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+            "Dummies": ["g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+            "Hide": ["a", "b", "c", "d", "e", "f"],
         }
 
-        # TODO: define possible values for each variable?
+        # define possible values for each variable
         self.gui_tabs_restricted = {
-            "side_port_light_intensities": ["Option 1", "Option 2", "Option 3"],
-            # Add more settings and their options here
+            "timer_for_response": [0, .5, 1, 5, 10],
+            "reward_amount_ml": [1, 2, 3, 4, 5],
         }
 
 
