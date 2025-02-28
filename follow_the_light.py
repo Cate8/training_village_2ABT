@@ -74,14 +74,6 @@ class FollowTheLight(Task):
         print("Trial {0}".format(str(self.current_trial)))
 
         ## Start the task
-        # On the first trial, the entry door to the behavioral box gets closed.
-        # This is coded as a transition in the 'close_door' state.
-        if self.current_trial == 1:
-            # Close the door
-            self.start_of_trial_transition = "close_door"
-        else:
-            self.start_of_trial_transition = "ready_to_initiate"
-
         ## Define the conditions for the trial
         # pick a trial type at random.
         self.this_trial_type = random.choice(self.settings.trial_types)
@@ -124,15 +116,8 @@ class FollowTheLight(Task):
         self.bpod.add_state(
             state_name="start_of_trial",
             state_timer=0.001,
-            state_change_conditions={Event.Tup: self.start_of_trial_transition},
-            output_actions=[Output.BNC2High],
-        )
-
-        self.bpod.add_state(
-            state_name="close_door",
-            state_timer=0,
             state_change_conditions={Event.Tup: "ready_to_initiate"},
-            output_actions=[Output.SoftCode1],
+            output_actions=[Output.BNC2High],
         )
 
         # 'ready_to_initiate' state that waits for the poke in the middle port
