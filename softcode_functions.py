@@ -4,6 +4,8 @@ from sound_functions import sound_device, tone_600
 from village.manager import manager
 
 
+
+
 def function1():
     manager.task.bpod.receive_softcode(1)
 
