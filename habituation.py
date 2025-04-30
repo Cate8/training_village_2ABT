@@ -1,8 +1,9 @@
-import random
-
 from village.classes.task import Event, Output, Task
 from village.manager import manager
 
+# click on the link below to see the documentation about how to create
+# tasks, plots and training protocols
+# https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
 
 class Habituation(Task):
     def __init__(self):
@@ -20,82 +21,76 @@ class Habituation(Task):
         both side ports are illuminated and give reward.
         """
 
-        # variables are defined in training_settings.py
-
     def start(self):
+        """
+        This function is called when the task starts.
+        It is used to calculate values needed for the task.
+        The following variables are accesible by default:
+        - self.bpod: Bpod object
+        - self.settings: Settings object
+        - self.manager: Manager object
+        - self.subject: Subject object
+        - self.task: Task object
+        - self.task_name: Task name
 
-        print("Habituation starts")
 
-        ## Initiate states that won't change during training
-        # Trial start state:
-        # Turn on light in the middle port
-        self.ready_to_initiate_output = [
-            (
-                Output.PWM2,
-                self.settings.middle_port_light_intensity,
-            )
-        ]
+        - self.bpod: (Bpod object)
+        - self.name: (str) the name of the task
+        self.subject: (str) the name of the subject
+        self.current_trial: (int) the current trial number starting from 1
+        self.current_trial_states: (list) information about the current trial
+        self.system_name: (str) the name of the system as defined in the
+                                tab settings of the GUI
+        self.settings: (Settings object) the settings defined in training_settings.py
+        self.trial_data: (dict) information about the current trial
+        self.force_stop: (bool) if made true the task will stop
+        self.maximum_number_of_trials: int = 100000000
+        self.chrono = time_utils.Chrono()
+
+        Al the variables created in training_settings.py are accessible here.
+        """
+
+        # In training_settins we created the following variables that are accesible here:
 
         # Time the valve needs to open to deliver the reward amount
         # Make sure to calibrate the valve before using it, otherwise this function
         # will return the default value of 0.01 seconds
-        self.left_valve_opening_time = manager.water_calibration.get_valve_time(
-            port=1, volume=self.settings.reward_amount_ml
-        )
-        self.right_valve_opening_time = manager.water_calibration.get_valve_time(
-            port=3, volume=self.settings.reward_amount_ml
-        )
 
-        # use maximum light intensity for both side ports
-        self.light_intensity_left = self.settings.side_port_light_intensities[-1]
-        self.light_intensity_right = self.settings.side_port_light_intensities[-1]
+        # self.left_valve_opening_time = manager.water_calibration.get_valve_time(
+        #     port=1, volume=self.settings.reward_amount_ml
+        # )
+        # self.right_valve_opening_time = manager.water_calibration.get_valve_time(
+        #     port=3, volume=self.settings.reward_amount_ml
+        # )
+
+        # # use maximum light intensity for both side ports
+        # self.light_intensity_left = self.settings.side_port_light_intensities[-1]
+        # self.light_intensity_right = self.settings.side_port_light_intensities[-1]
+
+        self.settings.reward_amount_ml = 0.05
+        self.left_valve_opening_time = 0.01
+        self.right_valve_opening_time = 0.01
+        self.light_intensity_left = 1
+        self.light_intensity_right = 1
+        self.light_intensity_center = 1
 
     def create_trial(self):
         """
-        This function updates the variables that will be used every trial
+        This function modifies variables and then sends the state machine to the bpod
+        before each trial.
         """
-        print("")
-        print("Trial {0}".format(str(self.current_trial)))
 
-        ## Start the task
-        # On the first trial, the entry door to the behavioral box gets closed.
-        # This is coded as a transition in the 'close_door' state.
-        if self.current_trial == 1:
-            # Close the door
-            self.start_of_trial_transition = "close_door"
-        else:
-            self.start_of_trial_transition = "ready_to_initiate"
-
-        # assemble the state machine
-        self.assemble_state_machine()
-
-    def assemble_state_machine(self):
-        # 'start_of_trial' state that sends a TTL pulse from the BNC channel 2
-        # This can be used to synchronize the task with other devices (not used here)
-        self.bpod.add_state(
-            state_name="start_of_trial",
-            state_timer=0.001,
-            state_change_conditions={Event.Tup: self.start_of_trial_transition},
-            output_actions=[Output.BNC2High],
-        )
-
-        self.bpod.add_state(
-            state_name="close_door",
-            state_timer=0,
-            state_change_conditions={Event.Tup: "ready_to_initiate"},
-            output_actions=[Output.SoftCode1],
-            # Output.SoftCode1 is used to close the door
-        )
-
-        # 'ready_to_initiate' state that waits for the poke in the middle port
+        # 'ready_to_initiate': state that turns on the middle port light and
+        # waits for a poke in the central port (Port2)
         self.bpod.add_state(
             state_name="ready_to_initiate",
             state_timer=0,
             state_change_conditions={Event.Port2In: "stimulus_state"},
-            output_actions=self.ready_to_initiate_output,
+            output_actions=[(Output.PWM2, self.light_intensity_center)],
         )
 
-        # 'stimulus_state' state that turns on the side ports and waits for a poke
+        # 'stimulus_state': state that turns on the side ports and
+        # waits for a poke in one of the side ports (Port1 or Port3)
         self.bpod.add_state(
             state_name="stimulus_state",
             state_timer=0,
@@ -104,12 +99,12 @@ class Habituation(Task):
                 Event.Port3In: "reward_state_right",
             },
             output_actions=[
-                (Output.PWM1,self.light_intensity_left),
-                (Output.PWM3,self.light_intensity_right),
+                (Output.PWM1, self.light_intensity_left),
+                (Output.PWM3, self.light_intensity_right),
             ],
         )
 
-        # reward_state_left and reward_state_right are the states that deliver the reward
+        # 'reward_state_left' and 'reward_state_right': states that deliver the reward
         self.bpod.add_state(
             state_name="reward_state_left",
             state_timer=self.left_valve_opening_time,
@@ -125,10 +120,23 @@ class Habituation(Task):
         )
 
     def after_trial(self):
-        # register the amount of water given to the mouse in this trial
-        # do not delete this variable, it is used to calculate the water consumption
-        # and trigger alarms. You can override the alarms in the GUI
+        """
+        Here you can register all the values you need to save for each trial.
+        It is essential to always include a variable named water, which stores the
+        amount of water consumed during each trial.
+        The system will calculate the total water consumption in each session
+        by summing this variable.
+        If the total water consumption falls below a certain threshold,
+        an alarm will be triggered.
+        This threshold can be adjusted in the Settings tab of the GUI.
+        """
+
         self.register_value("water", self.settings.reward_amount_ml)
 
     def close(self):
-        print("Closing Habituation task")
+        """
+        Here you can perform any actions you want to take once the task is completed,
+        such as sending a message via email or Slack, creating a plot, and more.
+        """
+
+        print("closed!!")

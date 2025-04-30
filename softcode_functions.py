@@ -1,18 +1,16 @@
 import time
 
-from village.devices.sound_device import sound_device, tone_generator
+from sound_functions import sound_device, tone_600
 from village.manager import manager
 
 
 def function1():
-    print("Function 1")
-    time.sleep(2)
-    manager.task.bpod.send_softcode(1)
+    manager.task.bpod.receive_softcode(1)
 
 
 def function2():
     start_time = time.time()
-    sound = tone_generator(1, 0.05, 600, 0.005, 192000)
+    sound = tone_600(duration = 1, gain = 0.05)
     sound_device.load(sound)
     end_time = time.time()
     print("load delay: ", end_time - start_time)

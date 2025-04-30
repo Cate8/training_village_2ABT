@@ -1,13 +1,7 @@
-import ast
-
-import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.figure import Figure
+import seaborn as sns
 from village.classes.plot import OnlinePlotFigureManager
-
-from plotting_functions import plot_side_correct_performance
 
 
 class Online_Plot(OnlinePlotFigureManager):
@@ -25,16 +19,15 @@ class Online_Plot(OnlinePlotFigureManager):
             self.make_trial_side_and_correct_plot(df, self.ax2)
         except Exception:
             self.make_error_plot(self.ax2)
-        
+
         self.fig.tight_layout()
-        self.fig.canvas.draw()
 
     def make_timing_plot(self, df: pd.DataFrame, ax: plt.Axes) -> None:
         ax.clear()
         df.plot(kind="scatter", x="TRIAL_START", y="trial", ax=ax)
 
     def make_trial_side_and_correct_plot(self, df: pd.DataFrame, ax: plt.Axes) -> None:
-        _ = plot_side_correct_performance(df, ax)        
+        _ = self.plot_side_correct_performance(df, ax)
 
     def make_error_plot(self, ax) -> None:
         ax.clear()
@@ -46,3 +39,15 @@ class Online_Plot(OnlinePlotFigureManager):
             verticalalignment="center",
             transform=ax.transAxes,
         )
+
+    def plot_side_correct_performance(df: pd.DataFrame, ax: plt.Axes) -> plt.Axes:
+        ax.clear()
+        # select only the last 100 trials
+        df = df.tail(100)
+        sns.scatterplot(data=df, x="trial", y="trial_type", hue="correct", ax=ax)
+        # make sure the y axis ticks are ascending, inverting the y axis
+        ax.invert_yaxis()
+        # plot the mean of the last 10 trials
+        ax.plot(pd.Series([int(x) for x in df.correct]).rolling(10).mean(), "r")
+
+        return ax

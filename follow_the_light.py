@@ -25,15 +25,13 @@ class FollowTheLight(Task):
                             No punishment is given, and the mouse can choose again.
         - Training stage 2: Both ports are illuminated with different intensity.
                             Brighter port gives reward, the other one gives punishment.
-        
+
         The progression through the stages is defined in the training_settings.py file.
         """
 
         # variables are defined in training_settings.py
 
     def start(self):
-
-        print("FollowTheLight starts")
 
         ## Initiate states that won't change during training
         # Trial start state:
@@ -191,7 +189,7 @@ class FollowTheLight(Task):
 
     def close(self):
         print("Closing the task")
-    
+
     def get_performance_of_trial(self) -> bool:
         """
         This method calculates the performance of a trial, comparing the trial type
@@ -210,7 +208,7 @@ class FollowTheLight(Task):
             return True
         else:
             return False
-        
+
     def find_first_occurrence(self, event_list, targets):
         for event in event_list:
             if event in targets:
@@ -225,7 +223,7 @@ class FollowTheLight(Task):
 if __name__ == "__main__":
     import time
 
-    from training_settings import TrainingSettings
+    from training_protocol import TrainingSettings
 
     task = FollowTheLight()
     training = TrainingSettings()
