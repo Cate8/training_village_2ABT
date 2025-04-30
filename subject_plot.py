@@ -1,4 +1,4 @@
-import calplot  # TODO: this needs to be installed as a dependency
+import calplot
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -13,7 +13,7 @@ class Subject_Plot(SubjectPlotFigureManager):
 
     def create_plot(self, df: pd.DataFrame) -> Figure:
         """
-        Overrides the default method to add a calendar
+        Number of trials and calendar.
         """
         dates_df = df.date.value_counts(sort=False)
         dates_df.index = pd.to_datetime(dates_df.index)
