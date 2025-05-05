@@ -1,38 +1,46 @@
 import random
 
 from village.classes.task import Event, Output, Task
+import random
+import numpy as np
+from scipy.signal import firwin, lfilter 
+import warnings
+from utils_functions import (generate_uniform_block_duration, 
+                             generate_block_probs_vec, 
+                             generate_block_reward_side_vec, 
+                             custom_random_iti)
 
 
 
-class S3(Task):
+class S4_0(Task):
 
     def __init__(self):
         super().__init__()
 
         self.info = """
         ########   TASK INFO   ########
------------------------------------------------------------------------------------------
- Task S3 – Center-Initiated Side Alternation Task
------------------------------------------------------------------------------------------
-• Purpose: Assess discrimination, side bias, and behavioral flexibility in mice.
-• Structure:
-    - Mice initiate each trial by poking the center port (center LED on).
-    - After center poke, both side LEDs turn on.
-    - Only one side delivers reward (correct side); the other is inactive.
-    - Reward side remains constant for 30 trials, then switches (left ↔ right).
-    - Initial side is randomly selected at session start.
-• Trial logic:
-    - Correct poke → water delivery.
-    - Wrong poke → timeout penalty (no reward).
-    - After reward or timeout, short delay before next trial.
-• Hardware support:
-    - Compatible with Box 9 and Box 12 configurations.
-    - Adapts valve, LED, and port mappings accordingly.
-• Outputs & data:
-    - Side of reward, total water consumed, and poke responses tracked per trial.
-----------------------------------------------------------------------------------------
-        """
-
+--------------------------------------------------------------------------------------------
+    Task S4 – Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
+--------------------------------------------------------------------------------------------
+    This task implements a version of the probabilistic two-alternative forced choice
+    (2AFC) task using dynamically changing reward probabilities structured in blocks.
+    
+    • Mice initiate each trial with a center poke, followed by a choice 
+      between left or right ports.
+    • Reward is delivered probabilistically based on the block-specific 
+      probability of reward on the right port (pR), while the left port's 
+      probability is 1-pR.
+    • The task alternates through a sequence of blocks, each with:
+        - A certain number of trials (drawn from a uniform or fixed distribution)
+        - A reward probability for the right port (either fixed, random, 
+          or permuted from a list)
+    • The side rewarded on each trial is drawn from a binomial distribution with p = pR.
+    • Inter-trial intervals (ITIs) are generated from a truncated exponential distribution.
+    
+    Output values such as reward side, ITI duration, block index, and behavioral outcome
+    (correct, incorrect, miss, omission) are recorded at the end of each trial.
+ ------------------------------------------------------------------------------------------
+"""
     def start(self):
 
         self.side = random.choice(["left", "right"])
@@ -73,45 +81,67 @@ class S3(Task):
             self.left_poke = Event.Port1In 
             self.center_poke = Event.Port4In
             self.right_poke = Event.Port7In 
-            
+    
 
+        #Generate the vector with the block duration (in trials)  for each block
+        self.block_duration_vec = generate_uniform_block_duration(x_type= self.settings.block_type, 
+                                                                  mean_x= self.settings.mean_x, 
+                                                                  N_blocks=self.settings.N_blocks
+                                                                  )
 
+        #Generate the vector with the p_Right values for each block
+        self.probs_vector = generate_block_probs_vec(self.settings.N_blocks, 
+                                                     self.settings.prob_block_type , 
+                                                     self.settings.prob_right_values, 
+                                                     self.settings.prob_Left_Right_blocks
+                                                     )
+
+        #Generate the binary vector with the Right (1) and Left (0) rewarded sides in each trial
+        self.reward_side_vec_fixed_prob = generate_block_reward_side_vec(self.settings.N_blocks,
+                                                                        self.block_duration_vec, 
+                                                                        self.probs_vector
+                                                                        )
+
+        #Generate the vector tailored ITIs values (from 1 to 30 sec, final mean=5 sec)
+        self.random_iti_values = custom_random_iti(self.settings.N_trials, 1, self.settings.lambda_param)
+
+        print("block_duration_vec: ", self.block_duration_vec)
+        #print("probs_vector: ", self.probs_vector)
+        #print("reward_side_vec_fixed_prob: ", self.reward_side_vec_fixed_prob)
+        #print("Tailored ITI values: ", self.random_iti_values)
 
     def create_trial(self):
 
-        if self.same_side_count == 0:
-            # change side and reset the counter 
-            self.side = "left" if self.side == "right" else "right"
-            self.same_side_count = self.settings.trials_with_same_side
- 
-        self.same_side_count -= 1
-        self.trial_count += 1
+        # current_trial starts at 1 we want to start at 0
+        self.probability = self.reward_side_vec_fixed_prob[self.current_trial-1][0]
+        self.reward_side_number = self.reward_side_vec_fixed_prob[self.current_trial-1][1]
+        self.block_identity = self.reward_side_vec_fixed_prob[self.current_trial-1][2]
+        self.random_iti = self.random_iti_values[self.current_trial-1]
+
+
+        print("current_trial: ", self.current_trial)
+        print("block_identity: ", self.block_identity)
+        print("probability: ", self.probability)
+        print("reward_side_number: ", self.reward_side_number)
+        #print("ITI_duration: ", self.random_iti)
             
         # Correct and wrong choices definition
-        if self.side == "left":
-            self.correct_side = self.side
+        if self.reward_side_number == 0:  # 0  for reward on the left side
+            self.correct_side = "left"
             self.wrong_side = "right"
+            self.correct_side = self.side
             self.correct_poke = self.left_poke
             self.wrong_poke = self.right_poke
             self.valvetime = self.valve_l_time
             self.valve_action = self.valve_l_reward
 
-
-        else:
+        else:  # 1 for reward on the right side
             self.correct_side = self.side
             self.wrong_side = "left"
             self.correct_poke = self.right_poke
             self.wrong_poke = self.left_poke
             self.valvetime = self.valve_r_time
             self.valve_action = self.valve_r_reward
-        
-      
-
-        print(self.side)
-        print(self.valvetime)
-        print(self.valve_action)
-
-
 
         #### CREATING STATE MACHINE, ADDING STATES, SENDING AND RUNNING ####
         
@@ -155,20 +185,18 @@ class S3(Task):
 
         self.bpod.add_state(
             state_name='drink_delay',
-            state_timer= self.settings.drink_delay_time ,
+            state_timer= self.random_iti,
             state_change_conditions={Event.Tup: 'exit'},
             output_actions=[])
-
 
 
     def after_trial(self):
         # Relevant prints
         print(self.trial_data)
 
-        self.register_value('side', self.side)
-
         # register how much water was delivered
         water_delivered = self.trial_data.get("STATE_water_delivery", False)
+
         if water_delivered:
             self.register_value('water', self.settings.volume)
         else:
@@ -193,6 +221,17 @@ class S3(Task):
         else:
 
             self.outcome = "omission"
+            
+        self.register_value('side', self.side)
+        self.register_value('correct_poke', self.correct_poke)
+        self.register_value('probability_r', self.probability)
+        self.register_value('Block_index', self.block_identity)
+        self.register_value('Block_type', self.settings.block_type)
+        self.register_value('Prob_block_type', self.settings.prob_block_type)
+        self.register_value('Probability_L_R_blocks', self.settings.prob_Left_Right_blocks)
+        self.register_value('list_prob_R_values', self.settings.prob_right_values)
+        self.register_value('outcome', self.outcome)
+        self.register_value('iti_duration', self.random_iti)
 
     def close(self):
         pass

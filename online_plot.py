@@ -4,7 +4,7 @@ import seaborn as sns
 from village.classes.plot import OnlinePlotFigureManager
 
 
-class Online_Plot(OnlinePlotFigureManager):
+class OnlinePlot(OnlinePlotFigureManager):
     def __init__(self) -> None:
         super().__init__()
         self.ax1 = self.fig.add_subplot(1, 2, 1)

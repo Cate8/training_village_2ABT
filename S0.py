@@ -1,11 +1,13 @@
 from village.classes.task import Event, Output, Task
 from village.manager import manager
 
+
 # click on the link below to see the documentation about how to create
 # tasks, plots and training protocols
 # https://braincircuitsbehaviorlab.github.io/village/user_guide/create.html
 
-class Habituation(Task):
+
+class S0(Task):
     def __init__(self):
         super().__init__()
 
@@ -14,11 +16,9 @@ class Habituation(Task):
         Habituation Task
         -------------------
 
-        This task is a simple visual task where the mouse has
-        to poke in illuminated ports.
-        The center port illuminates when a trial starts.
-        After the center port is poked,
-        both side ports are illuminated and give reward.
+        This task is an automatic mouse habitution to the box
+        nothing will happen during the task, the mouse will be
+        left alone in the box for 15 minutes. 
         """
 
     def start(self):
@@ -67,12 +67,6 @@ class Habituation(Task):
         # self.light_intensity_left = self.settings.side_port_light_intensities[-1]
         # self.light_intensity_right = self.settings.side_port_light_intensities[-1]
 
-        self.settings.reward_amount_ml = 0.05
-        self.left_valve_opening_time = 0.01
-        self.right_valve_opening_time = 0.01
-        self.light_intensity_left = 1
-        self.light_intensity_right = 1
-        self.light_intensity_center = 1
 
     def create_trial(self):
         """
@@ -80,43 +74,50 @@ class Habituation(Task):
         before each trial.
         """
 
+        if self.system_name == "9":
+            self.poke_l_side= Event.Port2In
+            self.poke_c_side= Event.Port3In
+            self.poke_r_side= Event.Port5In
+
+
+        elif self.system_name == "12": 
+            self.poke_l_side= Event.Port7In
+            self.poke_c_side= Event.Port5In
+            self.poke_r_side= Event.Port1In 
+
+        self.poke_side = [self.poke_l_side, self.poke_c_side, self.poke_r_side]
+
         # 'ready_to_initiate': state that turns on the middle port light and
         # waits for a poke in the central port (Port2)
         self.bpod.add_state(
-            state_name="ready_to_initiate",
-            state_timer=0,
-            state_change_conditions={Event.Port2In: "stimulus_state"},
-            output_actions=[(Output.PWM2, self.light_intensity_center)],
+            state_name="ready_to_explore",
+            state_timer= 5 * 60,
+            state_change_conditions={Event.Tup: "exit", 
+                                     self.poke_l_side: 'left_poke',
+                                     self.poke_c_side: 'center_poke',
+                                     self.poke_r_side: 'right_poke'},
+            output_actions=[],
         )
 
-        # 'stimulus_state': state that turns on the side ports and
-        # waits for a poke in one of the side ports (Port1 or Port3)
         self.bpod.add_state(
-            state_name="stimulus_state",
-            state_timer=0,
-            state_change_conditions={
-                Event.Port1In: "reward_state_left",
-                Event.Port3In: "reward_state_right",
-            },
-            output_actions=[
-                (Output.PWM1, self.light_intensity_left),
-                (Output.PWM3, self.light_intensity_right),
-            ],
-        )
-
-        # 'reward_state_left' and 'reward_state_right': states that deliver the reward
-        self.bpod.add_state(
-            state_name="reward_state_left",
-            state_timer=self.left_valve_opening_time,
+            state_name="left_poke",
+            state_timer= 0,
             state_change_conditions={Event.Tup: "exit"},
-            output_actions=[Output.Valve1],
+            output_actions=[],
         )
 
         self.bpod.add_state(
-            state_name="reward_state_right",
-            state_timer=self.right_valve_opening_time,
+            state_name="center_poke",
+            state_timer= 0,
             state_change_conditions={Event.Tup: "exit"},
-            output_actions=[Output.Valve3],
+            output_actions=[],
+        )
+
+        self.bpod.add_state(
+            state_name="right_poke",
+            state_timer= 0,
+            state_change_conditions={Event.Tup: "exit"},
+            output_actions=[],
         )
 
     def after_trial(self):
@@ -130,8 +131,23 @@ class Habituation(Task):
         an alarm will be triggered.
         This threshold can be adjusted in the Settings tab of the GUI.
         """
+        if 'STATE_left_poke_START' in self.current_trial_states:
+                self.outcome = "left_poke"
 
-        self.register_value("water", self.settings.reward_amount_ml)
+        if 'STATE_centre_poke_START' in self.current_trial_states:
+                self.outcome = "center_poke"
+        
+        if 'STATE_right_poke_START' in self.current_trial_states:
+                self.outcome = "right_poke"
+    
+        else: 
+            self.outcome = "no_action"
+
+        # Register the outcome of the trial
+        self.register_value('poke_l', self.poke_l_side)
+        self.register_value('poke_c', self.poke_c_side)
+        self.register_value('poke_r', self.poke_r_side)
+        self.register_value('outcome', self.outcome)
 
     def close(self):
         """
