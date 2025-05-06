@@ -43,10 +43,10 @@ class TrainingProtocol(Training):
         # Settings in this block are mandatory for everything
         # that runs on Traning Village
         # TODO: explain them
-        self.settings.next_task = "Habituation"
-        self.settings.refractary_period = 3600 * 4
-        self.settings.minimum_duration = 10 * 60
-        self.settings.maximum_duration = 20 * 60
+        self.settings.next_task = "S0"
+        self.settings.refractary_period = 1 * 60
+        self.settings.minimum_duration = 60
+        self.settings.maximum_duration = 2 * 60
 
         # Settings in this block are dependent on each task,
         # and the user needs to create and define them here
