@@ -18,28 +18,22 @@ class S4_0(Task):
         super().__init__()
 
         self.info = """
-        ########   TASK INFO   ########
---------------------------------------------------------------------------------------------
-    Task S4 – Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
---------------------------------------------------------------------------------------------
-    This task implements a version of the probabilistic two-alternative forced choice
-    (2AFC) task using dynamically changing reward probabilities structured in blocks.
-    
-    • Mice initiate each trial with a center poke, followed by a choice 
-      between left or right ports.
-    • Reward is delivered probabilistically based on the block-specific 
-      probability of reward on the right port (pR), while the left port's 
-      probability is 1-pR.
-    • The task alternates through a sequence of blocks, each with:
-        - A certain number of trials (drawn from a uniform or fixed distribution)
-        - A reward probability for the right port (either fixed, random, 
-          or permuted from a list)
-    • The side rewarded on each trial is drawn from a binomial distribution with p = pR.
-    • Inter-trial intervals (ITIs) are generated from a truncated exponential distribution.
-    
-    Output values such as reward side, ITI duration, block index, and behavioral outcome
-    (correct, incorrect, miss, omission) are recorded at the end of each trial.
- ------------------------------------------------------------------------------------------
+EASY S4: Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
+---------------------------------------------------------------------------------------
+This task implements a version of the probabilistic two-alternative forced choice (2AFC) task using dynamically changing reward probabilities structured in blocks.
+• Mice initiate each trial with a center poke, followed by a choice between l or r ports.
+• Reward is delivered probabilistically based on the block-specific probability of reward on the right port (pR), while the left port's probability is 1-pR.
+• The task alternates through a sequence of blocks, each with:
+- A certain number of trials (drawn from a uniform or fixed distribution)
+- A reward probability for the right port (either fixed, random, or permuted from a list)
+• The side rewarded on each trial is drawn from a binomial distribution with p = pR.
+• Inter-trial intervals (ITIs) are generated from a truncated exponential distribution.
+---------------------------------------------------------------------------------------
+Task Variables:  
+PROBABILITIES = [0.9, 0.1]  
+BLOCK TYPE = uniform, 30 trials
+MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
+
 """
     def start(self):
 

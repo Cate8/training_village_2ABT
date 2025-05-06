@@ -12,14 +12,13 @@ class S0(Task):
         super().__init__()
 
         self.info = """
-
-        Habituation Task
-        -------------------
-
-        This task is an automatic mouse habitution to the box
-        nothing will happen during the task, the mouse will be
-        left alone in the box for 15 minutes. 
-        """
+Habituation Task
+----------------------------------------------------------
+This task is an automatic mouse habitution to the box.
+nothing will happen during the task, the mouse will be
+left alone in the box for 15 minutes. Eventual pokes will 
+be registered but no reward will be delivered. 
+"""
 
     def start(self):
         """

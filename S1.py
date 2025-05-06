@@ -9,24 +9,21 @@ class S1(Task):
         super().__init__()
 
         self.info = """
-        ########   TASK INFO   ########
-        -----------------------------------------------------------------------------
-        Task S1 – Water Delivery Task
-        -----------------------------------------------------------------------------
-        Passive learning, at the moment of the lick, the reward is already delivered. 
-
-        - Each trial starts with:
-            * Reward valve opens (water is delivered)
-            * LED on the rewarded port turns on
-      
-
-        - The LED remains ON until:
-            * A poke is detected in the correct port
-            * Or a timeout occurs
-
-        - First trial delivers water automatically and waits for poke.
-        -----------------------------------------------------------------------------
-        """
+Passive learning, Water Delivery Task
+----------------------------------------------------------------
+It's desiged to habitute the mice to the LEDs and to the ports.
+the reward is already deliveredat the moment of the lick, Passive 
+learning. 
+- Each trial starts with:
+    * one reward valve opens (water is delivered)
+    * the corresponding LED turns on
+- The LED remains ON until:
+    * A poke is detected in the "correct" port
+    * Or a timeout occurs
+If the animal pokes in the wrong port nothing will happen, the mice 
+will remain in the same state until pokes in the "correct" port. The same 
+reward side will be repeated for n trials (20).
+"""
 
     def start(self):
         self.side = random.choice(["left", "right"])
@@ -60,30 +57,27 @@ class S1(Task):
                 self.valvetime = self.valve_l_time
                 self.valve_action = Output.Valve2
                 self.light_LED = (Output.PWM2, self.settings.led_intensity)
-                self.poke_LED_on_side= Event.Port2In
-                self.poke_LED_off_side= Event.Port5In
+                self.poke_side = Event.Port2In
 
             else:
                 self.valvetime = self.valve_r_time
                 self.valve_action = Output.Valve5
                 self.light_LED = (Output.PWM5, self.settings.led_intensity)
-                self.poke_LED_on_side= Event.Port5In   
-                self.poke_LED_off_side= Event.Port2In
+                self.poke_side= Event.Port5In   
+ 
         
         elif self.system_name == "12":  
             if self.side == "left":
                 self.valvetime = self.valve_l_time
                 self.valve_action = Output.Valve7
                 self.light_LED = (Output.PWM7, self.settings.led_intensity)
-                self.poke_LED_on_side= Event.Port7In
-                self.poke_LED_off_side= Event.Port1In
+                self.poke_side= Event.Port7In
 
             else:
                 self.valvetime = self.valve_r_time
                 self.valve_action = Output.Valve1
                 self.light_LED = (Output.PWM1, self.settings.led_intensity)
-                self.poke_LED_on_side= Event.Port1In
-                self.poke_LED_off_side= Event.Port7In 
+                self.poke_side= Event.Port1In   
 
         print(self.system_name)
         print(self.side)
@@ -109,16 +103,9 @@ class S1(Task):
             state_name='led_on',
             state_timer = self.settings.led_on_time ,
             state_change_conditions={Event.Tup: 'drink_delay',
-                                     self.poke_LED_on_side: 'drink_delay',
-                                     self.poke_LED_off_side: 'register_off_poke'},
+                                     self.poke_side: 'drink_delay',
+                                     },
             output_actions=[self.light_LED]
-            )
-
-        self.bpod.add_state(
-            state_name='register_off_poke',
-            state_timer = 0 ,
-            state_change_conditions={Event.Tup: 'led_on'},
-            output_actions=[]
             )
 
         self.bpod.add_state(
@@ -131,8 +118,8 @@ class S1(Task):
 
     def after_trial(self):
         # Relevant prints
-
         print(self.trial_data)
+
         self.register_value('side', self.side)
         self.register_value('water', self.settings.volume)
     

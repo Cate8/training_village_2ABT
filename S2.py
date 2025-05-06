@@ -10,24 +10,20 @@ class S2(Task):
         super().__init__()
 
         self.info = """
-        ########   TASK INFO   ########
-        -----------------------------------------------------------------------------
-        Task S2 – Water Delivery Task variation
-        -----------------------------------------------------------------------------
-        - The task is designed to teach mice to approach the lickport.
-        Active learning, at the moment of the lick, the reward will be delivered. 
-
-        - Each trial starts with:
-            * LED on the rewarded port turns on (one of the two ports)
-            * The animal as to poke in the port with the led on
-            * Reward valve opens (water is delivered)
-      
-
-        - The LED remains ON until:
-            * A poke is detected in the correct port
-            * Or a timeout occurs
-        -----------------------------------------------------------------------------
-        """
+Active learning, Water Delivery Task variation
+-----------------------------------------------------------------------------
+The task is designed to teach mice to approach the lickport:
+- Each trial starts with:
+    * LED on the rewarded port turns on (one of the two ports)
+    * The animal as to poke in the port with the led on
+    * Reward valve opens (water is delivered)
+- The LED remains ON until:
+    * A poke is detected in the correct port
+    * Or a timeout occurs
+If the animal pokes in the wrong port nothing will happen, the mice 
+will remain in the same state until pokes in the "correct" port. The same 
+reward side will be repeated for n trials (20).
+"""
 
     def start(self):
         self.side = random.choice(["left", "right"])

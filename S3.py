@@ -10,11 +10,10 @@ class S3(Task):
         super().__init__()
 
         self.info = """
-        ########   TASK INFO   ########
------------------------------------------------------------------------------------------
- Task S3 – Center-Initiated Side Alternation Task
------------------------------------------------------------------------------------------
-• Purpose: Assess discrimination, side bias, and behavioral flexibility in mice.
+Center-Initiated Side Alternation Task
+-----------------------------------------------------------------------------------
+Purpose: Tech mice o fixat in the center port, Assess discrimination, side bias, 
+and behavioral flexibility in mice.
 • Structure:
     - Mice initiate each trial by poking the center port (center LED on).
     - After center poke, both side LEDs turn on.
@@ -25,13 +24,7 @@ class S3(Task):
     - Correct poke → water delivery.
     - Wrong poke → timeout penalty (no reward).
     - After reward or timeout, short delay before next trial.
-• Hardware support:
-    - Compatible with Box 9 and Box 12 configurations.
-    - Adapts valve, LED, and port mappings accordingly.
-• Outputs & data:
-    - Side of reward, total water consumed, and poke responses tracked per trial.
-----------------------------------------------------------------------------------------
-        """
+"""
 
     def start(self):
 
