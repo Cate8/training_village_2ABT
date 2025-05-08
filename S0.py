@@ -88,6 +88,16 @@ be registered but no reward will be delivered.
 
         # 'ready_to_initiate': state that turns on the middle port light and
         # waits for a poke in the central port (Port2)
+       
+        if self.current_trial == 1:
+
+            self.bpod.add_state(
+                state_name="trial_0",
+                state_timer= 1,
+                state_change_conditions={Event.Tup: "exit"},
+                output_actions=[],
+            )
+    
         self.bpod.add_state(
             state_name="ready_to_explore",
             state_timer= 5 * 60,

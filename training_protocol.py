@@ -21,7 +21,7 @@ class TrainingProtocol(Training):
 
     The following variables are needed:
     - self.next_task
-    - self.refractary_period
+    - self.refractory_period
     - self.minimum_duration
     - self.maximum_duration
     In addition to these variables, all the necessary variables to modify the state
@@ -44,9 +44,9 @@ class TrainingProtocol(Training):
         # that runs on Traning Village
         # TODO: explain them
         self.settings.next_task = "S0"
-        self.settings.refractary_period = 1 * 60
-        self.settings.minimum_duration = 60
-        self.settings.maximum_duration = 2 * 60
+        self.settings.refractory_period = 30
+        self.settings.minimum_duration = 30
+        self.settings.maximum_duration =  60
 
         # Settings in this block are dependent on each task,
         # and the user needs to create and define them here
@@ -140,7 +140,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S0":
             sessions_in_S0 = self.df[self.df.task == "S0"].copy()
-            if sessions_in_S0 >= 2:
+            if len(sessions_in_S0) >= 2:
                 self.settings.next_task = "S1"
                 self.settings.minimum_duration = 20 * 60
                 self.settings.maximum_duration = 45 * 60
@@ -150,7 +150,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S1":
             sessions_in_S1 = self.df[self.df.task == "S1"].copy()
-            n_sessions_in_S1 = sessions_in_S1[sessions_in_S1.trial >= 3].session.count()
+            n_sessions_in_S1 = sessions_in_S1[sessions_in_S1.trial >= 7].session.count()
             if n_sessions_in_S1 >= 2:
                 self.settings.next_task = "S2"
                 self.settings.minimum_duration = 30 * 60
@@ -162,7 +162,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S2":
             sessions_in_S2 = self.df[self.df.task == "S2"].copy()
-            n_sessions_in_S2 = sessions_in_S2[sessions_in_S2.trial >= 3].session.count()
+            n_sessions_in_S2 = sessions_in_S2[sessions_in_S2.trial >= 7].session.count()
             if n_sessions_in_S2 >= 2:
                 self.settings.next_task = "S3"
                 self.settings.minimum_duration = 30 * 60
@@ -179,7 +179,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S3":
             sessions_in_S3 = self.df[self.df.task == "S3"].copy()
-            n_sessions_in_S3 = sessions_in_S3[sessions_in_S3.trial >= 3].session.count()
+            n_sessions_in_S3 = sessions_in_S3[sessions_in_S3.trial >= 7].session.count()
             if n_sessions_in_S3 >= 3:
                 self.settings.next_task = "S4_0"
                 self.settings.minimum_duration = 30 * 60
@@ -199,7 +199,7 @@ class TrainingProtocol(Training):
                 
         if self.last_task == "S4_0":
             sessions_in_S4_0 = self.df[self.df.task == "S4_0"].copy()
-            n_sessions_in_S4_0 = sessions_in_S4_0[sessions_in_S4_0.trial >= 3].session.count()
+            n_sessions_in_S4_0 = sessions_in_S4_0[sessions_in_S4_0.trial >= 7].session.count()
             if n_sessions_in_S4_0 >= 3:
                 self.settings.next_task = "S4_1"
                 self.settings.minimum_duration = 30 * 60
@@ -219,7 +219,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S4_1":
             sessions_in_S4_1 = self.df[self.df.task == "S4_1"].copy()
-            n_sessions_in_S4_1 = sessions_in_S4_1[sessions_in_S4_1.trial >= 3].session.count()
+            n_sessions_in_S4_1 = sessions_in_S4_1[sessions_in_S4_1.trial >= 7].session.count()
             if n_sessions_in_S4_1 >= 3:
                 self.settings.next_task = "S4_2"
                 self.settings.minimum_duration = 30 * 60
@@ -239,7 +239,7 @@ class TrainingProtocol(Training):
 
         if self.last_task == "S4_2":
             sessions_in_S4_2 = self.df[self.df.task == "S4_2"].copy()
-            n_sessions_in_S4_2 = sessions_in_S4_2[sessions_in_S4_2.trial >= 3].session.count()
+            n_sessions_in_S4_2 = sessions_in_S4_2[sessions_in_S4_2.trial >= 7].session.count()
             if n_sessions_in_S4_2 >= 3:
                 self.settings.next_task = "S4_3"
                 self.settings.minimum_duration = 30 * 60
