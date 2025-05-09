@@ -143,8 +143,8 @@ class TrainingProtocol(Training):
                 self.settings.next_task = "S1"
                 self.settings.minimum_duration = 20 * 60
                 self.settings.maximum_duration = 45 * 60
-                self.settings.trials_with_same_side = 20
-                self.settings.drink_delay_time = 5
+                self.settings.trials_with_same_side = 5
+                self.settings.drink_delay_time = 2
             else:
                 self.settings.next_task = "S0"
         
@@ -161,7 +161,7 @@ class TrainingProtocol(Training):
                     self.settings.volume = 5
                     self.settings.trials_with_same_side = 20
                     self.settings.led_on_time = 300
-                    self.settings.drink_delay_time = 5
+                    self.settings.drink_delay_time = 2
                 else:
                     self.settings.next_task = "S1" 
             else:
@@ -177,9 +177,9 @@ class TrainingProtocol(Training):
                     self.settings.minimum_duration = 30 * 60
                     self.settings.maximum_duration = 45 * 60
                     self.settings.volume = 3
-                    self.settings.trials_with_same_side = 20
+                    self.settings.trials_with_same_side = 5
                     self.settings.led_on_time = 300
-                    self.settings.drink_delay_time = 5
+                    self.settings.drink_delay_time = 2
                     self.settings.led_on_time = 5 * 60 
                     self.settings.c_led_on_time = 5 * 60 
 

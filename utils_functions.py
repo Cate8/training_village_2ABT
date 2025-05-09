@@ -1,8 +1,10 @@
 import numpy as np
 import random
 import warnings
+import pandas as pd
+import ast
 
-
+#---------------------------------TASK FUNCTIONS ---------------------------------------
 #GEOMETRIC DISTRIBUTION
 def generate_geometric_block_duration(x_type, mean_x, N_blocks):
     """"
@@ -191,9 +193,35 @@ def custom_random_iti(num_trials, num_values_per_trial, lambda_param):
         all_values.extend(trial_values)
     return all_values
 
+# ----------------------------------PLOTTING FUNCTIONS----------------------------------------
 
+def assign_ports(df: pd.DataFrame) -> pd.DataFrame:
+    """Assign left/right poke ports based on system_name."""
+    system_name = df['system_name'].iloc[0]
 
+    if system_name == 9:
+        df['left_poke_in'] = df['Port2In']
+        df['left_poke_out'] = df['Port2Out']
+        df['right_poke_in'] = df['Port5In']
+        df['right_poke_out'] = df['Port5Out']
+    elif system_name == 12:
+        df['left_poke_in'] = df['Port7In']
+        df['left_poke_out'] = df['Port7Out']
+        df['right_poke_in'] = df['Port1In']
+        df['right_poke_out'] = df['Port1Out']
+    else:
+        raise ValueError(f"Unsupported system_name: {system_name}")
+    
+    return df
 
-
-
+def extract_first_float(val):
+            if isinstance(val, str) and val.startswith("[") and val.endswith("]"):
+                try:
+                    return float(ast.literal_eval(val)[0])
+                except Exception:
+                    return None
+            try:
+                return float(val)  # fallback se il valore è già un numero in stringa
+            except:
+                return None
     
