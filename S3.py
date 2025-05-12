@@ -116,12 +116,12 @@ and behavioral flexibility in mice.
             state_name='c_led_on',
             state_timer= self.settings.c_led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay',
-                                    self.center_poke: 'side_LED_on'},
+                                    self.center_poke: 'side__on'},
             output_actions=[self.LED_c_on]
             )
 
         self.bpod.add_state(
-            state_name='side_LED_on',
+            state_name='side_led_on',
             state_timer= self.settings.led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay', 
                                     self.correct_poke: 'water_delivery',
@@ -151,8 +151,6 @@ and behavioral flexibility in mice.
             state_timer= self.settings.drink_delay_time ,
             state_change_conditions={Event.Tup: 'exit'},
             output_actions=[])
-
-
 
     def after_trial(self):
         # Relevant prints

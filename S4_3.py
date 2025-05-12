@@ -146,12 +146,12 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
             state_name='c_led_on',
             state_timer= self.settings.c_led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay',
-                                    self.center_poke: 'side_LED_on'},
+                                    self.center_poke: 'side_led_on'},
             output_actions=[self.LED_c_on]
             )
 
         self.bpod.add_state(
-            state_name='side_LED_on',
+            state_name='side_led_on',
             state_timer= self.settings.led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay', 
                                     self.correct_poke: 'water_delivery',
