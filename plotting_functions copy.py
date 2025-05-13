@@ -9,77 +9,133 @@ import matplotlib.gridspec as gridspec
 from scipy.special import erf
 from scipy.optimize import curve_fit
 from matplotlib.patches import Patch
-from session_parsing_functions import *
 
 # ----------------------------SESSION REPORT PLOTTING FUNCTIONS-----------------------------------
 
-#PLOT used to represent S1 and S2 sessions
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
+def assign_ports(df: pd.DataFrame) -> pd.DataFrame:
+    """Robustly assign left/right/centre poke ports based on system_name."""
+    
+    system_name = df['system_name'].iloc[0]
 
-def setup_figure_grid_S1_S2(ncols=3, nrows=3, height_ratios=[0.1, 1, 1], width_ratios=[1, 1, 0.3], figsize=(10, 8)):
-    """
-    Create a matplotlib figure with a configured GridSpec and font settings.
+    # Definizione delle mappe per ogni system_name
+    port_map = {
+        9: {
+            'left_poke_in': 'Port2In',
+            'left_poke_out': 'Port2Out',
+            'centre_poke_in': 'Port3In',
+            'centre_poke_out': 'Port3Out',
+            'right_poke_in': 'Port5In',
+            'right_poke_out': 'Port5Out',
+        },
+        12: {
+            'left_poke_in': 'Port7In',
+            'left_poke_out': 'Port7Out',
+            'centre_poke_in': 'Port4In',
+            'centre_poke_out': 'Port4Out',
+            'right_poke_in': 'Port1In',
+            'right_poke_out': 'Port1Out',
+        }
+    }
 
-    Args:
-        ncols (int): Number of columns in the grid.
-        nrows (int): Number of rows in the grid.
-        height_ratios (list): List of relative heights for each row.
-        width_ratios (list): List of relative widths for each column.
-        figsize (tuple): Size of the figure in inches (width, height).
+    if system_name not in port_map:
+        raise ValueError(f"Unsupported system_name: {system_name}")
+    
+    mapping = port_map[system_name]
 
-    Returns:
-        fig (Figure): The matplotlib Figure object.
-        gs (GridSpec): The GridSpec object to place subplots.
-    """
-    # Update global font settings
-    plt.rcParams.update({'font.size': 6, 'font.family': 'monospace'})
+    for new_col, source_col in mapping.items():
+        if source_col in df.columns:
+            df[new_col] = df[source_col]
+        else:
+            print(f"[assign_ports] Warning: column '{source_col}' not found in DataFrame. Skipping '{new_col}'.")
 
-    # Create the figure
-    fig = plt.figure(figsize=figsize)
+    return df
 
-    # Create a GridSpec layout with the specified rows, columns, and ratios
-    gs = gridspec.GridSpec(
-        nrows=nrows,
-        ncols=ncols,
-        figure=fig,
-        height_ratios=height_ratios,
-        width_ratios=width_ratios
-    )
 
-    return fig, gs
 
-def plot_session_summary(ax, df):
-    """
-    Display a text summary of the session on the given matplotlib axis.
+def extract_first_float(val):
+            if isinstance(val, str) and val.startswith("[") and val.endswith("]"):
+                try:
+                    return float(ast.literal_eval(val)[0])
+                except Exception:
+                    return None
+            try:
+                return float(val) 
+            except:
+                return None
+    
+def extract_first_from_list_string(val):
+            if isinstance(val, str):
+                try:
+                    parsed = ast.literal_eval(val) 
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        return float(parsed[0])
+                except Exception:
+                    return None
+            return None
 
-    Args:
-        ax (matplotlib.axes.Axes): The axis where the summary will be plotted.
-        df (pd.DataFrame): DataFrame containing session data.
+def parse_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse and compute all S1/S2-related variables from raw trial dataframe."""
 
-    Returns:
-        None
-    """
-    # Compute session stats
-    n_trials = len(df)
-    n_correct = df['correct_outcome_int'].sum()
-    pct_correct = round(n_correct / n_trials * 100, 2)
-    n_left = (df['first_trial_response'] == 'left').sum()
-    n_right = (df['first_trial_response'] == 'right').sum()
-    n_omit = (df['first_trial_response'] == 'no_response').sum()
-    rt_median = round(df['reaction_time'].median(), 2)
-    session_duration_min = round(df['session_duration'].iloc[0], 1)
+    # Basic durations
+    df['trial_duration'] = df['TRIAL_END'] - df['TRIAL_START']
+    df['sum_s_trial_duration'] = df['trial_duration'].sum()
+    df['session_duration'] = df['sum_s_trial_duration'].iloc[0] / 60
 
-    # Create the summary string
-    summary_text = (
-        f"Total trials: {n_trials} | Session: {session_duration_min} min | "
-        f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-        f"Omissions: {n_omit} | Median RT: {rt_median} s"
-    )
+    # Time parsing
+    for col in [
+        'STATE_drink_delay_START', 'STATE_drink_delay_END',
+        'STATE_led_on_START', 'STATE_led_on_END',
+        'STATE_water_delivery_START', 'STATE_water_delivery_END'
+    ]:
+        if col in df:
+            df[col] = df[col].apply(extract_first_float)
+        else:
+            print(f"[parse_data] Warning: column '{col}' not found, skipping.")
 
-    # Disable axis and display the text
-    ax.axis("off")
-    ax.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
+    # Durations and latencies
+    df['duration_drink_delay'] = df.get('STATE_drink_delay_END', 0) - df.get('STATE_drink_delay_START', 0)
+    df['duration_led_on'] = df.get('STATE_led_on_END', 0) - df.get('STATE_led_on_START', 0)
+    df['reaction_time'] = df.get('STATE_led_on_END', 0) - df.get('STATE_led_on_START', 0)
+
+    # First responses
+    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string) if 'right_poke_in' in df else None
+    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string) if 'left_poke_in' in df else None
+
+    left = df['first_response_left'].fillna(np.inf)
+    right = df['first_response_right'].fillna(np.inf)
+
+    conditions = [
+        df['first_response_left'].isna() & df['first_response_right'].isna(),
+        df['first_response_left'].isna(),
+        df['first_response_right'].isna(),
+        left <= right,
+        left > right,
+    ]
+    choices = ["no_response", "right", "left", "left", "right"]
+    df["first_trial_response"] = np.select(conditions, choices)
+
+    # Outcome
+    if 'side' in df:
+        df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+        df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
+        df["correct_outcome"] = np.where(df["correct_outcome_bool"], "correct", "incorrect")
+        df["correct_outcome_int"] = np.where(df["correct_outcome_bool"], 1, 0)
+    else:
+        print("[parse_data] Warning: 'side' column not found, skipping outcome computation.")
+        df["correct_outcome_bool"] = False
+        df["correct_outcome"] = "unknown"
+        df["correct_outcome_int"] = 0
+        df['true_count'] = 0
+
+    # Summary stats
+    df['reaction_time_median'] = df['reaction_time'].median()
+    df['tot_correct_choices'] = df['correct_outcome_int'].sum()
+    df['right_choices'] = (df['side'] == 'right').sum() if 'side' in df else 0
+    df['left_choices'] = (df['side'] == 'left').sum() if 'side' in df else 0
+
+    return df
+
+
 
 def plot_first_poke_side(ax, df):
     """Plot first poke side by outcome on the given axis."""
@@ -106,6 +162,18 @@ def plot_first_poke_side(ax, df):
     ax.legend(title="Outcome")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)   
+
+
+def parse_licks(val):
+    if isinstance(val, str):
+        try:
+            out = ast.literal_eval(val)
+            return out if isinstance(out, list) else []
+        except:
+            return []
+    elif isinstance(val, list):
+        return val
+    return []
 
 def plot_lick_raster_with_states(ax, df, fig):
             """
@@ -143,11 +211,11 @@ def plot_lick_raster_with_states(ax, df, fig):
 
                     # --- COLORED BANDS PER TRIAL ---
                     ax.fill_betweenx([trial - 0.4, trial + 0.4], led_on_start, led_on_end,
-                                    color='green', alpha=0.3, zorder=1)
+                                    color='lightblue', alpha=0.3, zorder=1)
                     ax.fill_betweenx([trial - 0.4, trial + 0.4], drink_start, drink_end,
                                     color='orange', alpha=0.3, zorder=1)
                     ax.fill_betweenx([trial - 0.4, trial + 0.4], reward_start, reward_end,
-                                    color='blue', alpha=0.3, zorder=1)
+                                    color='lightgreen', alpha=0.3, zorder=1)
 
                 except Exception as e:
                     print(f"Errore al trial {i}: {e}")
@@ -156,26 +224,6 @@ def plot_lick_raster_with_states(ax, df, fig):
             # --- PLOT LICKS ---
             ax.scatter(left_raster_times, left_raster_trials, marker='|', color='green',s=60, alpha=1.0, linewidths=0.5, label='Left lick', zorder=10)
             ax.scatter(right_raster_times, right_raster_trials, marker='|', color='purple', s=60,  alpha=1.0, linewidths=0.5, label='Right lick',  zorder=10)
-            
-            # Legend for states
-            state_legend = [
-                Patch(facecolor='green', alpha=0.3, label='side led ON'),
-                Patch(facecolor='orange', alpha=0.3, label='ITI'),
-                Patch(facecolor='blue', alpha=0.3, label='Reward')
-            ]
-
-            # Legend for licks
-            lick_legend = [
-                Patch(color='green', label='Left lick'),
-                Patch(color='purple', label='Right lick')
-            ]
-
-            # Combine and place legend outside bottom-right
-            ax.legend(handles=state_legend + lick_legend,
-                    loc='lower right',
-                    bbox_to_anchor=(1.75, -0.1),
-                    fontsize=6,
-                    frameon=False)
 
             ax.set_title("Lick raster (aligned to trial start)")
             ax.set_xlabel("Time from trial start (s)")
@@ -232,7 +280,58 @@ def plot_reaction_time(ax, df):
     ax.spines['right'].set_visible(False)
 
 
-#PLOT used to represent S3 and S4 sessions
+def parse_S3_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse and compute all S3-related variables from raw trial dataframe."""
+    # Basic durations
+    df['trial_duration'] = df['TRIAL_END'] - df['TRIAL_START']
+    df['sum_s_trial_duration'] = df['trial_duration'].sum()
+    df['session_duration'] = df['sum_s_trial_duration'].iloc[0] / 60
+
+    # Time parsing
+    df['STATE_drink_delay_START'] = df['STATE_drink_delay_START'].apply(extract_first_float)
+    df['STATE_drink_delay_END'] = df['STATE_drink_delay_END'].apply(extract_first_float)
+    df['STATE_c_led_on_START'] = df['STATE_c_led_on_START'].apply(extract_first_float)
+    df['STATE_c_led_on_END'] = df['STATE_c_led_on_END'].apply(extract_first_float)
+    df['STATE_side_led_on_START'] = df['STATE_side_led_on_START'].apply(extract_first_float)
+    df['STATE_side_led_on_END'] = df['STATE_side_led_on_END'].apply(extract_first_float)
+    df['STATE_water_delivery_START'] = df['STATE_water_delivery_START'].apply(extract_first_float)
+    df['STATE_water_delivery_END'] = df['STATE_water_delivery_END'].apply(extract_first_float)
+    df['STATE_penalty_START'] = df['STATE_penalty_START'].apply(extract_first_float)
+    df['STATE_penalty_END'] = df['STATE_penalty_END'].apply(extract_first_float)
+
+    # Durations and latencies
+    df['duration_drink_delay'] = df['STATE_drink_delay_END'] - df['STATE_drink_delay_START']
+    df['motor_time'] = df['STATE_side_led_on_END'] - df['STATE_side_led_on_START']
+    df['reaction_time'] = df['STATE_c_led_on_END'] - df['STATE_c_led_on_START']  # or water_delivery if appropriate
+
+    # First responses
+    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string)
+    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string)
+    df['first_response_center'] = df['centre_poke_in'].apply(extract_first_from_list_string)
+
+    conditions = [
+        df['first_response_left'].isna() & df['first_response_right'].isna(),
+        df['first_response_left'].isna(),
+        df['first_response_right'].isna(),
+        df['first_response_left'] <= df['first_response_right'],
+        df['first_response_left'] > df['first_response_right'],
+    ]
+    choices = ["no_response", "right", "left", "left", "right"]
+    df["first_trial_response"] = np.select(conditions, choices)
+
+    # Outcome
+    df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+    df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
+    df["correct_outcome"] = np.where(df["first_trial_response"] == df["side"], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df["side"], 1, 0)
+
+    # Summary stats
+    df['reaction_time_median'] = df['reaction_time'].median()
+    df['tot_correct_choices'] = df['correct_outcome_int'].sum()
+    df['right_choices'] = (df['side'] == 'right').sum()
+    df['left_choices'] = (df['side'] == 'left').sum()
+    return df
+
 def plot_right_reward_probability(df, ax=None):
     """Plot the probability of right reward over trials."""
     if ax is None:
@@ -400,6 +499,57 @@ def plot_lick_raster_with_states_S3(ax, df, fig):
             ax.set_ylim(df['trial'].min() - 1, df['trial'].max() + 1)
             ax.invert_yaxis()
 
+def parse_S4_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse and compute all S4-related variables from raw trial dataframe."""
+    # Basic durations
+    df['trial_duration'] = df['TRIAL_END'] - df['TRIAL_START']
+    df['sum_s_trial_duration'] = df['trial_duration'].sum()
+    df['session_duration'] = df['sum_s_trial_duration'].iloc[0] / 60
+
+    # Time parsing
+    df['STATE_drink_delay_START'] = df['STATE_drink_delay_START'].apply(extract_first_float)
+    df['STATE_drink_delay_END'] = df['STATE_drink_delay_END'].apply(extract_first_float)
+    df['STATE_c_led_on_START'] = df['STATE_c_led_on_START'].apply(extract_first_float)
+    df['STATE_c_led_on_END'] = df['STATE_c_led_on_END'].apply(extract_first_float)
+    df['STATE_side_led_on_START'] = df['STATE_side_led_on_START'].apply(extract_first_float)
+    df['STATE_side_led_on_END'] = df['STATE_side_led_on_END'].apply(extract_first_float)
+    df['STATE_water_delivery_START'] = df['STATE_water_delivery_START'].apply(extract_first_float)
+    df['STATE_water_delivery_END'] = df['STATE_water_delivery_END'].apply(extract_first_float)
+    df['STATE_penalty_START'] = df['STATE_penalty_START'].apply(extract_first_float)
+    df['STATE_penalty_END'] = df['STATE_penalty_END'].apply(extract_first_float)
+
+    # Durations and latencies
+    df['duration_drink_delay'] = df['STATE_drink_delay_END'] - df['STATE_drink_delay_START']
+    df['motor_time'] = df['STATE_side_led_on_END'] - df['STATE_side_led_on_START']
+    df['reaction_time'] = df['STATE_c_led_on_END'] - df['STATE_c_led_on_START']  # or water_delivery if appropriate
+
+    # First responses
+    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string)
+    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string)
+    df['first_response_center'] = df['centre_poke_in'].apply(extract_first_from_list_string)
+
+    conditions = [
+        df['first_response_left'].isna() & df['first_response_right'].isna(),
+        df['first_response_left'].isna(),
+        df['first_response_right'].isna(),
+        df['first_response_left'] <= df['first_response_right'],
+        df['first_response_left'] > df['first_response_right'],
+    ]
+    choices = ["no_response", "right", "left", "left", "right"]
+    df["first_trial_response"] = np.select(conditions, choices)
+
+    # Outcome
+    df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+    df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
+    df["correct_outcome"] = np.where(df["first_trial_response"] == df["side"], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df["side"], 1, 0)
+
+    # Summary stats
+    df['reaction_time_median'] = df['reaction_time'].median()
+    df['tot_correct_choices'] = df['correct_outcome_int'].sum()
+    df['right_choices'] = (df['side'] == 'right').sum()
+    df['left_choices'] = (df['side'] == 'left').sum()
+    return df
 
 def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
     """
@@ -484,6 +634,10 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
 
     return ax
 
+def probit(x, beta, alpha):
+        # Probit function to generate the curve for the PC
+        return 0.5 * (1 + erf((beta * x + alpha) / np.sqrt(2)))
+    
 def plot_psychometric_curve(df, ax=None):
     """Plot psychometric curve: proportion of right choices vs. right reward probability."""
     if ax is None:

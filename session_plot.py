@@ -10,6 +10,7 @@ import matplotlib.patches as mpatches
 import ast
 from village.classes.plot import SessionPlotFigureManager
 from plotting_functions import *
+from session_parsing_functions import *
 
 
 class SessionPlot(SessionPlotFigureManager):
@@ -52,7 +53,7 @@ class SessionPlot(SessionPlotFigureManager):
     
     def plot_S1(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
         df = assign_ports(df)
-        df = parse_data(df)
+        df = parse_data_S1_S2(df)
         
         # --- prepare the grid ---
         fig = plt.figure(figsize=(width, height))
@@ -121,7 +122,7 @@ class SessionPlot(SessionPlotFigureManager):
     #============================================   S2   =================================================
     def plot_S2(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
         df = assign_ports(df)
-        df = parse_data(df)
+        df = parse_data_S1_S2(df)
         # --- prepare the grid ---
         fig = plt.figure(figsize=(width, height))
         gs = gridspec.GridSpec(
@@ -208,7 +209,7 @@ class SessionPlot(SessionPlotFigureManager):
         gs = gridspec.GridSpec(
             4, 3, 
             figure=fig,
-            height_ratios=[0.1, 1, 1, 1],
+            height_ratios=[0.1, 2, 1, 2],
             width_ratios=[1, 1, 0.3]  
         )
         # === TEXT SUMMARY ===
@@ -243,7 +244,7 @@ class SessionPlot(SessionPlotFigureManager):
         plot_latency_to_first_poke(df, ax4)
 
         # --- PLOT 5: lick raster and state machine ---
-        plot_lick_raster_with_states_S4(ax5, df, fig)
+        plot_lick_raster_with_states_S3_S4(ax5, df, fig)
         
         plt.subplots_adjust(hspace=0.4, wspace=0.15, top=0.95, bottom=0.09, left= 0.05)
         return fig
@@ -258,20 +259,16 @@ class SessionPlot(SessionPlotFigureManager):
         gs = gridspec.GridSpec(
             4, 3,  
             figure=fig,
-            height_ratios=[0.1, 1, 1, 0.7], 
+            height_ratios=[0.1, 2, 1, 2], 
             width_ratios=[1, 1, 1]        
 )
         # === TEXT SUMMARY ===
         ax0 = fig.add_subplot(gs[0, :])       # Summary
-
         ax1 = fig.add_subplot(gs[1, 0:2])     # First poke (side)
         ax6 = fig.add_subplot(gs[1, 2])       # Psychometric
-       
-
         ax3 = fig.add_subplot(gs[2, 0])       # Trial progression
         ax4 = fig.add_subplot(gs[2, 1])       # Reaction time
         ax7 = fig.add_subplot(gs[2, 2])       # ITI histogram
-
         ax5 = fig.add_subplot(gs[3, :])       # Raster
                 
         n_trials = len(df)
@@ -300,7 +297,7 @@ class SessionPlot(SessionPlotFigureManager):
         plot_latency_to_first_poke(df, ax4)
 
         # --- PLOT 5: lick raster and state machine ---
-        plot_lick_raster_with_states_S4(ax5, df, fig)
+        plot_lick_raster_with_states_S3_S4(ax5, df, fig)
         
         # --- PLOT 6: PC right choice vs P(getting reward for the right side)  ---
         plot_psychometric_curve(df, ax6)
@@ -308,6 +305,6 @@ class SessionPlot(SessionPlotFigureManager):
         # --- PLOT 7: histigram iti duration in the session  ---
         plot_iti_histogram(ax7, df)
 
-        plt.subplots_adjust(hspace=0.7, wspace=0.3, top=0.95, bottom=0.09, left= 0.05)
+        plt.subplots_adjust(hspace=0.6, wspace=0.2, top=0.95, bottom=0.09, left= 0.05)
         return fig
         
