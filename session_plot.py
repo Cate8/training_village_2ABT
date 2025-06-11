@@ -308,3 +308,4 @@ class SessionPlot(SessionPlotFigureManager):
         plt.subplots_adjust(hspace=0.6, wspace=0.2, top=0.95, bottom=0.09, left= 0.05)
         return fig
         
+        #send_slack_plots()

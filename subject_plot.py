@@ -21,7 +21,7 @@ class SubjectPlot(SubjectPlotFigureManager):
     def create_plot(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
         plt.rcParams.update({'font.size': 6, 'font.family': 'monospace'})
         fig = plt.figure(figsize=(width, height))
-        
+
         gs = gridspec.GridSpec(
             3, 3,
             figure=fig,
@@ -33,7 +33,7 @@ class SubjectPlot(SubjectPlotFigureManager):
         ax0 = fig.add_subplot(gs[0, :])  # Summary
         self.plot_activity_timeline(ax0, df)
 
-         # Calendar plot
+        # Calendar plot
         ax1 = fig.add_subplot(gs[1, 1])
         self.plot_calendar(ax1, df)
 
@@ -45,9 +45,9 @@ class SubjectPlot(SubjectPlotFigureManager):
         ax3 = fig.add_subplot(gs[2, 0])
         self.plot_task_histogram(ax3, df)
 
-        # # Reaction time
-        # ax4 = fig.add_subplot(gs[2, 1])
-        # ax4.set_title("Reaction time")
+        # # Subject weight
+        #ax4 = fig.add_subplot(gs[2, 1])
+        #self.plot_relative_weights(ax4, df, current_weight=df['basal_weight'].iloc[-1] if not df['weight'].empty else 0)
 
         # # Lick raster
         # ax5 = fig.add_subplot(gs[1:, 2])
@@ -291,6 +291,3 @@ class SubjectPlot(SubjectPlotFigureManager):
         ax.set_title('Subject activity (last 7 days)')
         ax.set_xlabel('Date')
         ax.grid(True, axis='x', linestyle=':', alpha=0.3)
-
-
-        
