@@ -116,7 +116,7 @@ and behavioral flexibility in mice.
             state_name='c_led_on',
             state_timer= self.settings.c_led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay',
-                                    self.center_poke: 'side__on'},
+                                    self.center_poke: 'side_led_on'},
             output_actions=[self.LED_c_on]
             )
 
