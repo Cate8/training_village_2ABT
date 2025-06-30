@@ -199,7 +199,7 @@ class TrainingProtocol(Training):
                     self.settings.minimum_duration = 30 * 60
                     self.settings.maximum_duration = 45 * 60
                     self.settings.volume = 3
-                    self.settings.trials_with_same_side = 30
+                    self.settings.trials_with_same_side = 5
                     self.settings.drink_delay_time = 5
                     self.settings.led_on_time = 5 * 60 
                     self.settings.c_led_on_time = 5 * 60 

@@ -25,8 +25,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import slack_sdk as slack
 from dotenv import load_dotenv
-from def_intersession_plot import *
+from Plotting_intersession import *
+from session_parsing_functions import *
 from utils_functions import *
+from matplotlib import gridspec
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -107,28 +110,96 @@ def find_aggregate_csv(animal_dir: Path) -> Path | None:
     return None
 
 # -- plotting --------------------------------------------------------------
-
-def plot_dataframe(df: pd.DataFrame, title: str, output_pdf_path) -> None:
+def plot_dataframe(df: pd.DataFrame, title: str, output_pdf_path: str) -> None:
     """
-    Main function: parses, filters, computes and plots into A4 PDF.
+    Generate a multipanel plot in an A4 PDF using GridSpec with a custom layout,
+    only for specific tasks (S3, S4_0, S4_1, ...).
     """
-    df = parse_dataframe(df)
-    df = filter_last_days(df)
+    # Filter dataframe to include only tasks of interest
+    tasks_to_plot = ['S3'] + [f'S4_{i}' for i in range(10)]  # Customize the range as needed
+    df = df[df['task'].isin(tasks_to_plot)].copy()
+    print("[DEBUG] Columns after reading CSV:", list(df.columns))
+    print(f"[DEBUG] Unique tasks after filter: {df['task'].unique()}")
+    print(f"[DEBUG] Number of rows after filter: {len(df)}")
+    if df.empty:
+        print("No data available for the selected tasks.")
+        return
 
-    #print(f"Columns of the DataFrame used for plotting: {df.columns.tolist()}")
+    # Assign standardized port columns
+    df = assign_ports_intersession(df)
+    print("[DEBUG] Columns after assign_ports:", list(df.columns))
+
+    # Check required columns after assign_ports
+    required_columns = ['centre_poke_in']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        print(f"[Main] Required columns missing after assign_ports: {missing_columns}. Skipping parsing and plotting.")
+        return
+
+    # Parse data for S4
+    df = parse_S4_data(df)
+
+    # Convert date column to datetime for analysis
+    df_aggregated = aggregate_data(df)
+    print(f"[DEBUG] Sample of df_aggregated['date']:\n{df_aggregated['date'].head()}")
+    print(f"[DEBUG] Unique dates in df_aggregated: {df_aggregated['date'].unique()}")
+
+    # Create the PDF and the figure with A4 size
     with PdfPages(output_pdf_path) as pdf:
-        fig, axs = plt.subplots(2, 1, figsize=(8.27, 11.69))  # A4 portrait in inches
+        fig = plt.figure(figsize=(20, 27))  # A4 portrait in inches
 
-        # Plot accuracy by stage
-        generate_psychometric_plot(df)
+        # GridSpec with 5 rows and 5 columns for flexible layout
+        gs = gridspec.GridSpec(
+            6, 5,
+            figure=fig,
+            height_ratios=[0.1, 1.3, 1.3, 1.3, 1.5, 1.5],
+            width_ratios=[1.3, 1.3, 1.3, 1.3, 1.3]
+        )
 
-        # Optional second plot (empty grid placeholder)
-        axs[1].axis("off")
-        axs[1].text(0.5, 0.5, "Second plot goes here", ha="center", va="center")
+        # --- ROW 0: Subject title ---
+        ax_title = fig.add_subplot(gs[0, :])
+        ax_title.axis("off")
+        ax_title.text(0.5, 0.5, title, fontsize=16, va='center', ha='center', weight='bold')
 
-        fig.tight_layout()
+        # --- ROW 1: 5 psychometric plots ---
+        ax_row1 = [fig.add_subplot(gs[1, i]) for i in range(5)]
+        print(f"[DEBUG] Calling plot_psychometric_curves with {len(df_aggregated)} rows")
+        plot_psychometric_curves(df_aggregated, ax_row1)
+
+        # --- ROW 2: 5 plots ---
+        ax_row2 = [fig.add_subplot(gs[2, i]) for i in range(5)]
+        plot_correct_choice_curves(df_aggregated, ax_row2)
+
+        # --- ROW 3: 4 plots ---
+        ax_row3 = [fig.add_subplot(gs[3, i]) for i in range(5)]
+        plot_aggregate_psychometric_right_choice(df, ax_row3[0])
+        plot_aggregate_correct_choice_mean(df, ax_row3[1])
+        plot_aggregate_psychometric_right_choice_by_iti(df, ax_row3[2])
+        plot_aggregate_correct_choice_by_iti(df, ax_row3[3])
+        plot_behavior_around_block_change(df, ax_row3[4])
+
+        # --- ROW 4: 3 long plot ---
+        ax_rowN_side = fig.add_subplot(gs[4, 0:2])  # es. prima metà della riga
+        ax_rowN_center = fig.add_subplot(gs[4, 2:4])  # seconda metà della riga
+        plot_latency_curves(df, ax_rowN_side, ax_rowN_center)
+        ax_iti = fig.add_subplot(gs[4, 4:5])  # occupa la riga 8, colonne 0-50
+        plot_iti_histogram(ax_iti, df)
+
+        # --- ROW 5: 3 long plot ---
+        ax_lastrow_side = fig.add_subplot(gs[5, 0:2])
+        ax_lastrow_center = fig.add_subplot(gs[5, 2:4])
+        plot_latency_across_trials(df, ax_lastrow_side, ax_lastrow_center)
+
+        ax_session_agg = fig.add_subplot(gs[5, 4:5])
+        plot_sessionwise_binned_outcome_aggregate(df, ax_session_agg, bin_size=10, min_trials_per_bin=5, smooth_window=3)
+
+        # Layout adjustments
+        plt.subplots_adjust(hspace=0.5, wspace=0.4, top=0.95, bottom=0.05, left=0.05, right=0.95)
+    
         pdf.savefig(fig)
         plt.close(fig)
+
+    print(f"PDF saved to {output_pdf_path}")
 
 def send_slack_plots() -> None:
     for animal_dir in sorted(p for p in BASE_DIR.iterdir() if p.is_dir()):
