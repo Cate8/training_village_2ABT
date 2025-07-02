@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 from Plotting_intersession import *
 from session_parsing_functions import *
 from utils_functions import *
+from plotting_functions import *
 from matplotlib import gridspec
 
 
@@ -109,7 +110,8 @@ def find_aggregate_csv(animal_dir: Path) -> Path | None:
     # If no exact match, return None or you can handle differently
     return None
 
-# -- plotting --------------------------------------------------------------
+
+# -- plotting Last Stages S3 and S4 --------------------------------------------------------------
 def plot_dataframe(df: pd.DataFrame, title: str, output_pdf_path: str) -> None:
     """
     Generate a multipanel plot in an A4 PDF using GridSpec with a custom layout,
@@ -200,6 +202,7 @@ def plot_dataframe(df: pd.DataFrame, title: str, output_pdf_path: str) -> None:
         plt.close(fig)
 
     print(f"PDF saved to {output_pdf_path}")
+
 
 def send_slack_plots() -> None:
     for animal_dir in sorted(p for p in BASE_DIR.iterdir() if p.is_dir()):

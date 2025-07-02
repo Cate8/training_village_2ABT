@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
+from matplotlib.patches import Patch
 
+# ------------------------------ Data Processing Functions ------------------------------
 def assign_ports_intersession(df: pd.DataFrame) -> pd.DataFrame:
     """Robustly assign left/right/centre poke ports based on system_name, even with weird column names."""
 
@@ -55,6 +57,135 @@ def assign_ports_intersession(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+# ---------------------------- Lick raster S1 and S2 -------------------------------------
+def parse_licks(raw):
+    """
+    Safely parse a string of lick times separated by commas into a list of floats.
+    Returns an empty list if input is NaN, None or invalid.
+    """
+    if pd.isna(raw) or raw is None:
+        return []
+    if isinstance(raw, (int, float)):  # Already numeric → wrap in list
+        return [float(raw)]
+    try:
+        return [float(val.strip()) for val in str(raw).split(',') if val.strip()]
+    except Exception as e:
+        print(f"[WARN] Could not parse licks '{raw}': {e}")
+        return []
+
+
+def safe_float(value):
+    """Converts value to float, returns np.nan if conversion fails."""
+    try:
+        if pd.isna(value) or value in ["nan", "None", None, ""]:
+            return np.nan
+        return float(value)
+    except Exception:
+        return np.nan
+
+def parse_licks(raw):
+    """
+    Safely parse a string of lick times separated by commas into a list of floats.
+    Returns an empty list if input is NaN, None or invalid.
+    """
+    if pd.isna(raw) or raw is None:
+        return []
+    if isinstance(raw, (int, float)):  # Already numeric → wrap in list
+        return [float(raw)]
+    try:
+        return [float(val.strip()) for val in str(raw).split(',') if val.strip()]
+    except Exception as e:
+        print(f"[WARN] Could not parse licks '{raw}': {e}")
+        return []
+
+def plot_lick_raster_with_states(ax, df, fig):
+    """
+    Plot a lick raster aligned to TRIAL_START, with state phases as colored bands.
+    Green = left licks, Purple = right licks.
+    Lightblue = LED ON, Orange = Drink Delay, Blue = Water Delivery.
+    """
+
+    left_raster_trials = []
+    left_raster_times = []
+    right_raster_trials = []
+    right_raster_times = []
+
+    for i, row in df.iterrows():
+        try:
+            trial = row['trial']
+            t0 = safe_float(row['TRIAL_START'])
+            if np.isnan(t0):
+                raise ValueError(f"Invalid TRIAL_START at trial {trial}")
+
+            # --- LICK TIMES ---
+            left_licks = [
+                lick_num - t0
+                for lick_num in [safe_float(l) for l in parse_licks(row['left_poke_in'])]
+                if not np.isnan(lick_num)
+            ]
+            right_licks = [
+                lick_num - t0
+                for lick_num in [safe_float(l) for l in parse_licks(row['right_poke_in'])]
+                if not np.isnan(lick_num)
+            ]
+
+            left_raster_trials.extend([trial] * len(left_licks))
+            left_raster_times.extend(left_licks)
+            right_raster_trials.extend([trial] * len(right_licks))
+            right_raster_times.extend(right_licks)
+
+            # --- STATES ---
+            led_on_start = safe_float(row['STATE_led_on_START']) - t0
+            led_on_end   = safe_float(row['STATE_led_on_END'])   - t0
+            drink_start  = safe_float(row['STATE_drink_delay_START']) - t0
+            drink_end    = safe_float(row['STATE_drink_delay_END'])   - t0
+            reward_start = safe_float(row['STATE_water_delivery_START']) - t0
+            reward_end   = safe_float(row['STATE_water_delivery_END'])   - t0
+
+            # --- DRAW STATE BANDS ---
+            if not np.isnan(led_on_start) and not np.isnan(led_on_end):
+                ax.fill_betweenx([trial-0.4, trial+0.4], led_on_start, led_on_end,
+                                 color='lightblue', alpha=0.3, zorder=1)
+            if not np.isnan(drink_start) and not np.isnan(drink_end):
+                ax.fill_betweenx([trial-0.4, trial+0.4], drink_start, drink_end,
+                                 color='orange', alpha=0.3, zorder=1)
+            if not np.isnan(reward_start) and not np.isnan(reward_end):
+                ax.fill_betweenx([trial-0.4, trial+0.4], reward_start, reward_end,
+                                 color='blue', alpha=0.3, zorder=1)
+
+        except Exception as e:
+            print(f"Error at trial {trial}: {e}")
+            continue
+
+    # --- PLOT LICKS ---
+    ax.scatter(left_raster_times, left_raster_trials, marker='|', color='green', s=60, alpha=1.0, linewidths=0.5, label='Left lick', zorder=10)
+    ax.scatter(right_raster_times, right_raster_trials, marker='|', color='purple', s=60, alpha=1.0, linewidths=0.5, label='Right lick', zorder=10)
+
+    # Legends
+    state_legend = [
+        Patch(facecolor='lightblue', alpha=0.3, label='LED ON'),
+        Patch(facecolor='orange', alpha=0.3, label='Drink Delay'),
+        Patch(facecolor='blue', alpha=0.3, label='Water Delivery')
+    ]
+    lick_legend = [
+        Patch(color='green', label='Left lick'),
+        Patch(color='purple', label='Right lick')
+    ]
+
+    ax.legend(handles=state_legend + lick_legend,
+              loc='lower right', bbox_to_anchor=(1.75, -0.1),
+              fontsize=6, frameon=False)
+
+    ax.set_title("Lick raster (aligned to trial start)")
+    ax.set_xlabel("Time from trial start (s)")
+    ax.set_ylabel("Trial")
+    ax.set_xlim(left=0)
+    ax.set_ylim(df['trial'].min() - 1, df['trial'].max() + 1)
+    ax.invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+# ----------------------- Data Plotting Functions S3 and S4 ------------------------------
 # Convert date strings to datetime objects
 def aggregate_data(df):
     """
