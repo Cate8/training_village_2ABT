@@ -33,8 +33,8 @@ reward side will be repeated for n trials (20).
             self.valve_l_time = self.water_calibration.get_valve_time(port = 2, volume = self.settings.volume)
             self.valve_r_time = self.water_calibration.get_valve_time(port = 5, volume = self.settings.volume)
         elif self.system_name == "12":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
+            self.valve_l_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
+            self.valve_r_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
            
         # counters
         self.trial_count = 0

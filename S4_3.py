@@ -61,19 +61,19 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
             self.right_poke = Event.Port5In 
 
         elif self.system_name == "12":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
+            self.valve_l_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
+            self.valve_r_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
            
-            self.valve_l_reward = Output.Valve1
-            self.valve_r_reward = Output.Valve7 
+            self.valve_l_reward = Output.Valve7
+            self.valve_r_reward = Output.Valve1 
 
-            self.LED_l_on = (Output.PWM1, self.settings.led_intensity)
+            self.LED_l_on = (Output.PWM7, self.settings.led_intensity)
             self.LED_c_on = (Output.PWM4, self.settings.led_intensity)
-            self.LED_r_on = (Output.PWM7, self.settings.led_intensity)
+            self.LED_r_on = (Output.PWM1, self.settings.led_intensity)
 
-            self.left_poke = Event.Port1In 
+            self.left_poke = Event.Port7In 
             self.center_poke = Event.Port4In
-            self.right_poke = Event.Port7In 
+            self.right_poke = Event.Port1In 
     
 
         #Generate the vector with the block duration (in trials)  for each block

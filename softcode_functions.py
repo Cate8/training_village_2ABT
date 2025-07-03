@@ -8,8 +8,8 @@ task = get_task()
 
 def function1():
     print("play sound")
-    # sound = whitenoise_generator(1, 0.1, 0.005)
-    # sound_device.load(left=sound, right=sound)
-    # sound_device.play()
+    sound = whitenoise_generator(0.5, 0.5, 0.005)
+    sound_device.load(left=sound, right=sound)
+    sound_device.play()
 
 
