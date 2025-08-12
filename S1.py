@@ -1,7 +1,7 @@
 import random
 
 from village.classes.task import Event, Output, Task
-
+from BpodPorts import BpodPorts
 
 class S1(Task):
 
@@ -27,20 +27,17 @@ reward side will be repeated for n trials (20).
 
     def start(self):
         self.side = random.choice(["left", "right"])
-
-        # pumps
-        if self.system_name == "9":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 2, volume = self.settings.volume)
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 5, volume = self.settings.volume)
-        elif self.system_name == "12":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
-           
         # counters
         self.trial_count = 0
         # to keep track of the number of trials on the same side
         self.same_side_count = self.settings.trials_with_same_side 
         self.reward_drunk = 0
+
+        self.ports = BpodPorts(
+            n_box=self.system_name,
+            water_calibration=self.water_calibration,
+            settings=self.settings
+        )
 
     def create_trial(self):
 
@@ -51,34 +48,18 @@ reward side will be repeated for n trials (20).
  
         self.same_side_count -= 1
         self.trial_count += 1
-            
-        if self.system_name == "9":
-            if self.side == "left":
-                self.valvetime = self.valve_l_time
-                self.valve_action = Output.Valve2
-                self.light_LED = (Output.PWM2, self.settings.led_intensity)
-                self.poke_side = Event.Port2In
 
-            else:
-                self.valvetime = self.valve_r_time
-                self.valve_action = Output.Valve5
-                self.light_LED = (Output.PWM5, self.settings.led_intensity)
-                self.poke_side= Event.Port5In   
+        if self.side == "left":
+            self.valvetime = self.ports.valve_l_time
+            self.valve_action = self.ports.valve_l_reward
+            self.light_LED = self.ports.LED_l_on
+            self.poke_side = self.ports.left_poke
+        else:
+            self.valvetime = self.ports.valve_r_time
+            self.valve_action = self.ports.valve_r_reward
+            self.light_LED = self.ports.LED_r_on
+            self.poke_side = self.ports.right_poke 
  
-        
-        elif self.system_name == "12":  
-            if self.side == "left":
-                self.valvetime = self.valve_l_time
-                self.valve_action = Output.Valve7
-                self.light_LED = (Output.PWM7, self.settings.led_intensity)
-                self.poke_side= Event.Port7In
-
-            else:
-                self.valvetime = self.valve_r_time
-                self.valve_action = Output.Valve1
-                self.light_LED = (Output.PWM1, self.settings.led_intensity)
-                self.poke_side= Event.Port1In   
-
         print(self.system_name)
         print(self.side)
         print(self.valvetime)

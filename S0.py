@@ -1,6 +1,6 @@
 from village.classes.task import Event, Output, Task
 from village.manager import manager
-
+from BpodPorts import BpodPorts
 
 # click on the link below to see the documentation about how to create
 # tasks, plots and training protocols
@@ -65,26 +65,29 @@ be registered but no reward will be delivered.
         # # use maximum light intensity for both side ports
         # self.light_intensity_left = self.settings.side_port_light_intensities[-1]
         # self.light_intensity_right = self.settings.side_port_light_intensities[-1]
-
+        self.ports = BpodPorts(
+            n_box=self.system_name,
+            water_calibration=self.water_calibration,
+            settings=self.settings
+        )
 
     def create_trial(self):
         """
         This function modifies variables and then sends the state machine to the bpod
         before each trial.
         """
+        """
+                if self.system_name == "9":
+                    self.ports.left_poke= Event.Port2In
+                    self.ports.center_poke= Event.Port3In
+                    self.ports.right_poke= Event.Port5In
 
-        if self.system_name == "9":
-            self.poke_l_side= Event.Port2In
-            self.poke_c_side= Event.Port3In
-            self.poke_r_side= Event.Port5In
 
-
-        elif self.system_name == "12": 
-            self.poke_l_side= Event.Port7In
-            self.poke_c_side= Event.Port5In
-            self.poke_r_side= Event.Port1In 
-
-        self.poke_side = [self.poke_l_side, self.poke_c_side, self.poke_r_side]
+                elif self.system_name == "12": 
+                    self.ports.left_poke= Event.Port7In
+                    self.ports.center_poke= Event.Port5In
+                    self.ports.right_poke= Event.Port1In 
+        """
 
         # 'ready_to_initiate': state that turns on the middle port light and
         # waits for a poke in the central port (Port2)
@@ -102,9 +105,9 @@ be registered but no reward will be delivered.
             state_name="ready_to_explore",
             state_timer= 5 * 60,
             state_change_conditions={Event.Tup: "exit", 
-                                     self.poke_l_side: 'left_poke',
-                                     self.poke_c_side: 'center_poke',
-                                     self.poke_r_side: 'right_poke'},
+                                     self.ports.left_poke: 'left_poke',
+                                     self.ports.center_poke: 'center_poke',
+                                     self.ports.right_poke: 'right_poke'},
             output_actions=[],
         )
 
@@ -153,9 +156,9 @@ be registered but no reward will be delivered.
             self.outcome = "no_action"
 
         # Register the outcome of the trial
-        self.register_value('poke_l', self.poke_l_side)
-        self.register_value('poke_c', self.poke_c_side)
-        self.register_value('poke_r', self.poke_r_side)
+        self.register_value('poke_l', self.ports.left_poke)
+        self.register_value('poke_c', self.ports.center_poke)
+        self.register_value('poke_r', self.ports.right_poke)
         self.register_value('outcome', self.outcome)
 
     def close(self):

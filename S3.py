@@ -1,7 +1,7 @@
 import random
 
 from village.classes.task import Event, Output, Task
-
+from BpodPorts import BpodPorts
 
 
 class S3(Task):
@@ -35,40 +35,11 @@ and behavioral flexibility in mice.
         self.same_side_count = self.settings.trials_with_same_side 
         self.reward_drunk = 0
 
-        # Valve time,Valve reward, LED lights, pokes definition 
-        # according to the system name 
-        if self.system_name == "9":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 2, volume = self.settings.volume)
-            self.valve_l_reward = Output.Valve2
-
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 5, volume = self.settings.volume)
-            self.valve_r_reward = Output.Valve5
-
-            self.LED_l_on = (Output.PWM2, self.settings.led_intensity)
-            self.LED_c_on = (Output.PWM3, self.settings.led_intensity)
-            self.LED_r_on = (Output.PWM5, self.settings.led_intensity)
-
-            self.left_poke = Event.Port2In 
-            self.center_poke = Event.Port3In
-            self.right_poke = Event.Port5In 
-
-        elif self.system_name == "12":
-            self.valve_l_time = self.water_calibration.get_valve_time(port = 7, volume = self.settings.volume)
-            self.valve_r_time = self.water_calibration.get_valve_time(port = 1, volume = self.settings.volume)
-           
-            self.valve_l_reward = Output.Valve7
-            self.valve_r_reward = Output.Valve1 
-
-            self.LED_l_on = (Output.PWM7, self.settings.led_intensity)
-            self.LED_c_on = (Output.PWM4, self.settings.led_intensity)
-            self.LED_r_on = (Output.PWM1, self.settings.led_intensity)
-
-            self.left_poke = Event.Port7In 
-            self.center_poke = Event.Port4In
-            self.right_poke = Event.Port1In 
-            
-
-
+        self.ports = BpodPorts(
+            n_box=self.system_name,
+            water_calibration=self.water_calibration,
+            settings=self.settings
+        )
 
     def create_trial(self):
 
@@ -84,19 +55,17 @@ and behavioral flexibility in mice.
         if self.side == "left":
             self.correct_side = self.side
             self.wrong_side = "right"
-            self.correct_poke = self.left_poke
-            self.wrong_poke = self.right_poke
-            self.valvetime = self.valve_l_time
-            self.valve_action = self.valve_l_reward
-
-
+            self.correct_poke = self.ports.left_poke
+            self.wrong_poke = self.ports.right_poke
+            self.valvetime = self.ports.valve_l_time
+            self.valve_action = self.ports.valve_l_reward
         else:
             self.correct_side = self.side
             self.wrong_side = "left"
-            self.correct_poke = self.right_poke
-            self.wrong_poke = self.left_poke
-            self.valvetime = self.valve_r_time
-            self.valve_action = self.valve_r_reward
+            self.correct_poke = self.ports.right_poke
+            self.wrong_poke = self.ports.left_poke
+            self.valvetime = self.ports.valve_r_time
+            self.valve_action = self.ports.valve_r_reward
         
       
 
@@ -116,8 +85,8 @@ and behavioral flexibility in mice.
             state_name='c_led_on',
             state_timer= self.settings.c_led_on_time,
             state_change_conditions={Event.Tup: 'drink_delay',
-                                    self.center_poke: 'side_led_on'},
-            output_actions=[self.LED_c_on]
+                                    self.ports.center_poke: 'side_led_on'},
+            output_actions=[self.ports.LED_c_on]
             )
 
         self.bpod.add_state(
@@ -128,7 +97,7 @@ and behavioral flexibility in mice.
                                     self.wrong_poke: 'penalty'
                                     },
 
-            output_actions=[self.LED_l_on, self.LED_r_on]
+            output_actions=[self.ports.LED_l_on, self.ports.LED_r_on]
             )
 
         self.bpod.add_state(
