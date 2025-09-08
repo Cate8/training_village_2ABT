@@ -191,7 +191,7 @@ class TrainingProtocol(Training):
 
         elif self.last_task == "S3":
             df_S3 = self.df[self.df.task == "S3"]
-            if len(df_S3) >= 2:
+            if len(df_S3) >= 3:
                 df_last_two_session_S3 = df_S3.iloc[-2:]
                 n_trials_S3 = df_last_two_session_S3.trial.sum()
                 if n_trials_S3 >= 200:
@@ -217,7 +217,7 @@ class TrainingProtocol(Training):
                 
         elif self.last_task == "S4_0":
             df_S4_0 = self.df[self.df.task == "S4_0"]
-            if len(df_S4_0) >= 2:
+            if len(df_S4_0) >= 3:
                 df_last_two_session_S4_0 = df_S4_0.iloc[-2:]
                 n_trials_S4_0 = df_last_two_session_S4_0.trial.sum()
                 if n_trials_S4_0 >= 300:
@@ -244,7 +244,7 @@ class TrainingProtocol(Training):
 
         elif self.last_task == "S4_1":
             df_S4_1 = self.df[self.df.task == "S4_1"]
-            if len(df_S4_1) >= 2:
+            if len(df_S4_1) >= 3:
                 df_last_two_session_S4_1 = df_S4_1.iloc[-2:]
                 n_trials_S4_1 = df_last_two_session_S4_1.trial.sum()
                 if n_trials_S4_1 >= 300:
@@ -271,7 +271,7 @@ class TrainingProtocol(Training):
         
         elif self.last_task == "S4_2":
             df_S4_2 = self.df[self.df.task == "S4_2"]
-            if len(df_S4_2) >= 2:
+            if len(df_S4_2) >= 3:
                 df_last_two_session_S4_2 = df_S4_2.iloc[-2:]
                 n_trials_S4_2 = df_last_two_session_S4_2.trial.sum()
                 if n_trials_S4_2 >= 300:
