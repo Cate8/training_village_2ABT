@@ -205,6 +205,7 @@ def plot_dataframe(df: pd.DataFrame, title: str, output_pdf_path: str) -> None:
 
 
 def send_slack_plots() -> None:
+    print("slack plots")
     for animal_dir in sorted(p for p in BASE_DIR.iterdir() if p.is_dir()):
         csv_path = find_aggregate_csv(animal_dir)
         animal_name = animal_dir.name

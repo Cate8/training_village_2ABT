@@ -8,19 +8,21 @@ from pathlib import Path
 
 from village.scripts.safe_removal_of_data import main as safe_removal_script
 from village.settings import Active, settings
+from village.classes.change_cycle_run import ChangeCycleRun
+from send_intersession_slack import send_slack_plots
+import time
 
 
-class ChangeCycleRun:
+class ChangeCycle(ChangeCycleRun):
     def __init__(self) -> None:
-        self.directory = settings.get("VIDEOS_DIRECTORY")
-        self.days = settings.get("DAYS_OF_VIDEO_STORAGE")
-        self.safe = settings.get("SAFE_DELETE") == Active.ON
-        self.backup_dir = str(Path(settings.get("SERVER_DIRECTORY"), "videos"))
-        self.remote_user = settings.get("SERVER_USER")
-        self.remote_host = settings.get("SERVER_HOST")
-        self.port = settings.get("SERVER_PORT")
+        self.super().__init__()
 
     def run(self) -> None:
+        # si es antes de las 12 de la mañana, envía los plots al slack
+        now = time.time()
+        if time.localtime(now).tm_hour < 12:
+            send_slack_plots()
+
         safe_removal_script(
             directory=self.directory,
             days=self.days,
@@ -31,9 +33,3 @@ class ChangeCycleRun:
             port=self.port,
         )
 
-        #send_slack_plots()
-
-
-if __name__ == "__main__":
-    change_cycle_run = ChangeCycleRun()
-    change_cycle_run.run()
