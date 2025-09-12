@@ -188,7 +188,7 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         print(self.trial_data)
 
         # register how much water was delivered
-        water_delivered = self.trial_data.get("STATE_water_delivery", False)
+        water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
 
         if water_delivered:
             self.register_value('water', self.settings.volume)

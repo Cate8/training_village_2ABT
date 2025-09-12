@@ -15,11 +15,12 @@ import time
 
 class ChangeCycle(ChangeCycleRun):
     def __init__(self) -> None:
-        self.super().__init__()
+        super().__init__()
 
     def run(self) -> None:
         # si es antes de las 12 de la mañana, envía los plots al slack
         now = time.time()
+        send_slack_plots()
         if time.localtime(now).tm_hour < 12:
             send_slack_plots()
 
