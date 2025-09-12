@@ -141,10 +141,10 @@ class TrainingProtocol(Training):
             df_S0 = self.df[self.df["task"] == "S0"]
             if len(df_S0) >= 1:
                 self.settings.next_task = "S1"
-                self.settings.minimum_duration = 20 * 60
+                self.settings.minimum_duration = 25 * 60
                 self.settings.maximum_duration = 45 * 60
-                self.settings.trials_with_same_side = 5
-                self.settings.drink_delay_time = 2
+                self.settings.trials_with_same_side = 20
+                self.settings.drink_delay_time = 5
             else:
                 self.settings.next_task = "S0"
         
@@ -156,7 +156,7 @@ class TrainingProtocol(Training):
                 n_trials_S1 = df_last_two_session_s1.trial.sum()
                 if n_trials_S1 >= 100:
                     self.settings.next_task = "S2"
-                    self.settings.minimum_duration = 20 * 60
+                    self.settings.minimum_duration = 25 * 60
                     self.settings.maximum_duration = 45 * 60
                     self.settings.volume = 5
                     self.settings.trials_with_same_side = 20
@@ -177,7 +177,7 @@ class TrainingProtocol(Training):
                     self.settings.minimum_duration = 30 * 60
                     self.settings.maximum_duration = 45 * 60
                     self.settings.volume = 3
-                    self.settings.trials_with_same_side = 5
+                    self.settings.trials_with_same_side = 30
                     self.settings.led_on_time = 300
                     self.settings.drink_delay_time = 2
                     self.settings.led_on_time = 5 * 60 
@@ -199,7 +199,7 @@ class TrainingProtocol(Training):
                     self.settings.minimum_duration = 30 * 60
                     self.settings.maximum_duration = 45 * 60
                     self.settings.volume = 3
-                    self.settings.trials_with_same_side = 5
+                    self.settings.trials_with_same_side = 30
                     self.settings.drink_delay_time = 5
                     self.settings.led_on_time = 5 * 60 
                     self.settings.c_led_on_time = 5 * 60 
@@ -220,7 +220,7 @@ class TrainingProtocol(Training):
             if len(df_S4_0) >= 3:
                 df_last_two_session_S4_0 = df_S4_0.iloc[-2:]
                 n_trials_S4_0 = df_last_two_session_S4_0.trial.sum()
-                if n_trials_S4_0 >= 300:
+                if n_trials_S4_0 >= 250:
                     self.settings.next_task = "S4_1"
                     self.settings.minimum_duration = 30 * 60
                     self.settings.maximum_duration = 45 * 60
