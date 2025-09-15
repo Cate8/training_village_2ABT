@@ -35,7 +35,23 @@ def assign_ports_intersession(df: pd.DataFrame) -> pd.DataFrame:
             'centre_poke_out': 'Port4Out',
             'right_poke_in': 'Port1In',
             'right_poke_out': 'Port1Out',
-        }
+        }, 
+        11: {
+            'left_poke_in': 'Port2In',
+            'left_poke_out': 'Port2Out',
+            'centre_poke_in': 'Port3In',
+            'centre_poke_out': 'Port3Out',
+            'right_poke_in': 'Port5In',
+            'right_poke_out': 'Port5Out',
+        },
+        8: {
+            'left_poke_in': 'Port3In',
+            'left_poke_out': 'Port3Out',
+            'centre_poke_in': 'Port2In',
+            'centre_poke_out': 'Port2Out',
+            'right_poke_in': 'Port1In',
+            'right_poke_out': 'Port1Out',
+        },
     }
 
     if system_name not in port_map:

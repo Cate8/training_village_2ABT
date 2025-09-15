@@ -20,7 +20,8 @@ class ChangeCycle(ChangeCycleRun):
     def run(self) -> None:
         # si es antes de las 12 de la mañana, envía los plots al slack
         now = time.time()
-        if time.localtime(now).tm_hour < 12:
+        #if time.localtime(now).tm_hour < 12:
+        if True:
             send_slack_plots()
 
         safe_removal_script(

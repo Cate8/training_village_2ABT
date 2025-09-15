@@ -32,6 +32,7 @@ reward side will be repeated for n trials (20).
         self.ports = BpodPorts(
             n_box=self.system_name,
             water_calibration=self.water_calibration,
+            sound_calibration=self.sound_calibration,
             settings=self.settings
         )
 

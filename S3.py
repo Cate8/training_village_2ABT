@@ -38,6 +38,7 @@ and behavioral flexibility in mice.
         self.ports = BpodPorts(
             n_box=self.system_name,
             water_calibration=self.water_calibration,
+            sound_calibration=self.sound_calibration,
             settings=self.settings
         )
 
