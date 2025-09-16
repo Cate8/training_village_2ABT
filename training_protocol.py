@@ -44,7 +44,7 @@ class TrainingProtocol(Training):
         # that runs on Traning Village
         # TODO: explain them
         self.settings.next_task = "S0"
-        self.settings.refractory_period = 10 * 60
+        self.settings.refractory_period = 240 * 60
         self.settings.minimum_duration = 10 * 60
         self.settings.maximum_duration =  15 * 60
 
