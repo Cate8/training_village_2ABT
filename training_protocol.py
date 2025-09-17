@@ -139,7 +139,7 @@ class TrainingProtocol(Training):
         """
         if self.last_task == "S0":
             df_S0 = self.df[self.df["task"] == "S0"]
-            if len(df_S0) >= 1:
+            if len(df_S0) >= 3:
                 self.settings.next_task = "S1"
                 self.settings.minimum_duration = 25 * 60
                 self.settings.maximum_duration = 45 * 60
