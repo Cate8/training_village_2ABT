@@ -9,8 +9,10 @@ from pathlib import Path
 from village.scripts.safe_removal_of_data import main as safe_removal_script
 from village.settings import Active, settings
 from village.classes.change_cycle_run import ChangeCycleRun
+from village.log import log
 from send_intersession_slack import send_slack_plots
 import time
+import traceback
 
 
 class ChangeCycle(ChangeCycleRun):
@@ -21,7 +23,10 @@ class ChangeCycle(ChangeCycleRun):
         # si es antes de las 12 de la mañana, envía los plots al slack
         now = time.time()
         if time.localtime(now).tm_hour < 12:
-            send_slack_plots()
+            try:
+                send_slack_plots()
+            except Exception:
+                log.error("Error sending slack plots", exception=traceback.format_exc())
 
         safe_removal_script(
             directory=self.directory,
