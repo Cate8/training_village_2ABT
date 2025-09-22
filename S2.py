@@ -103,7 +103,7 @@ reward side will be repeated for n trials (20).
         self.register_value('side', self.side)
         
         # register how much water was delivered
-        water_delivered = self.trial_data.get("STATE_water_delivery", False)
+        water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
         if water_delivered:
             self.register_value('water', self.settings.volume)
         else:

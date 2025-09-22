@@ -176,8 +176,8 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
 
             if water_delivery_start > 0:
                 self.outcome = "correct"
-        elif 'STATE_wrong_side' in self.current_trial_states and len(self.current_trial_states['STATE_wrong_side']) > 0:
-            wrong_side = self.current_trial_states['STATE_wrong_side'][0]
+        elif 'STATE_wrong_side_START' in self.current_trial_states and len(self.current_trial_states['STATE_wrong_side_START']) > 0:
+            wrong_side = self.current_trial_states['STATE_wrong_side_START'][0]
 
             if wrong_side > 0:
                 self.outcome = "incorrect"
