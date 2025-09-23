@@ -20,7 +20,7 @@ class S4_1(Task):
         super().__init__()
 
         self.info = """
-EASY S4: Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
+EASY-MEDIUM S4: Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
 ---------------------------------------------------------------------------------------
 This task implements a version of the probabilistic two-alternative forced choice (2AFC) task using dynamically changing reward probabilities structured in blocks.
 • Mice initiate each trial with a center poke, followed by a choice between l or r ports.
@@ -30,12 +30,11 @@ This task implements a version of the probabilistic two-alternative forced choic
 - A reward probability for the right port (either fixed, random, or permuted from a list)
 • The side rewarded on each trial is drawn from a binomial distribution with p = pR.
 • Inter-trial intervals (ITIs) are generated from a truncated exponential distribution.
----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
 Task Variables:  
-PROBABILITIES = [0.9, 0.1]  
+PROBABILITIES = [0.9, 0.1, 0.8, 0.2]  
 BLOCK TYPE = uniform, 30 trials
-MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
-
+MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
 """
     def start(self):
         self.side = random.choice(["left", "right"])
