@@ -272,10 +272,10 @@ def plot_right_reward_probability(df, ax=None):
     for i, row in df.iterrows():
         if row["first_resp_left"]:
             markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            ax.plot(i, -0.15 if markersize == 15 else -0.35, '|', color='green', markersize=markersize)
+            ax.plot(i, 1.15 if markersize == 15 else 1.35, '|', color='purple', markersize=markersize)
         if row["first_resp_right"]:
             markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            ax.plot(i, 1.15 if markersize == 15 else 1.35, '|', color='purple', markersize=markersize)
+            ax.plot(i, -0.15 if markersize == 15 else -0.35, '|', color='green', markersize=markersize)
 
     # --- SIDE LABLES ---
     ax.text(1.02, 0.1, 'L', ha='left', va='top', color='green', transform=ax.transAxes, fontsize=10)
@@ -436,9 +436,9 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
     # Plot response ticks (green = left, purple = right)
     for i, row in df.iterrows():
         correct = row["correct_outcome_int"] == 1
-        if row["first_trial_response"] == "left":
+        if row["first_trial_response"] == "right":
             ax.plot(row["trial"], -0.15 if correct else -0.35, '|', color="green", markersize=15 if correct else 5)
-        elif row["first_trial_response"] == "right":
+        elif row["first_trial_response"] == "left":
             ax.plot(row["trial"], 1.15 if correct else 1.35, '|', color="purple", markersize=15 if correct else 5)
 
 

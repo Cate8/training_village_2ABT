@@ -205,9 +205,19 @@ def assign_ports(df: pd.DataFrame) -> pd.DataFrame:
         df['left_poke_out'] = df['Port2Out']
         df['right_poke_in'] = df['Port5In']
         df['right_poke_out'] = df['Port5Out']
+    elif system_name == 11:
+        df['left_poke_in'] = df['Port2In']
+        df['left_poke_out'] = df['Port2Out']
+        df['right_poke_in'] = df['Port5In']
+        df['right_poke_out'] = df['Port5Out']
     elif system_name == 12:
         df['left_poke_in'] = df['Port7In']
         df['left_poke_out'] = df['Port7Out']
+        df['right_poke_in'] = df['Port1In']
+        df['right_poke_out'] = df['Port1Out']
+    elif system_name == 12:
+        df['left_poke_in'] = df['Port3In']
+        df['left_poke_out'] = df['Port3Out']
         df['right_poke_in'] = df['Port1In']
         df['right_poke_out'] = df['Port1Out']
     else:
