@@ -5,13 +5,14 @@ import random
 import numpy as np
 from scipy.signal import firwin, lfilter 
 import warnings
-from BpodPorts import BpodPorts
 from utils_functions import (generate_uniform_block_duration, 
                              generate_block_probs_vec, 
                              generate_block_reward_side_vec, 
-                             custom_random_iti)
+                             custom_random_iti,
+                             )
 
-
+from BpodPorts import BpodPorts
+import time
 
 class S4_3(Task):
 
@@ -19,7 +20,7 @@ class S4_3(Task):
         super().__init__()
 
         self.info = """
-HARD S4: Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
+EASY S4: Probabilistic Two-Armed Bandit with Blocked Reward Contingencies
 ---------------------------------------------------------------------------------------
 This task implements a version of the probabilistic two-alternative forced choice (2AFC) task using dynamically changing reward probabilities structured in blocks.
 • Mice initiate each trial with a center poke, followed by a choice between l or r ports.
@@ -29,14 +30,14 @@ This task implements a version of the probabilistic two-alternative forced choic
 - A reward probability for the right port (either fixed, random, or permuted from a list)
 • The side rewarded on each trial is drawn from a binomial distribution with p = pR.
 • Inter-trial intervals (ITIs) are generated from a truncated exponential distribution.
-----------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 Task Variables:  
-PROBABILITIES = [0.9, 0.1, 0.8, 0.2, 0.7, 0.3, 0.6, 0.4]  
-BLOCK TYPE = VARIABLE LENGHT (MIN 20 MAX 55)
-MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
+PROBABILITIES = [0.9, 0.1]  
+BLOCK TYPE = uniform, 30 trials
+MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
+
 """
     def start(self):
-
         self.side = random.choice(["left", "right"])
         # counters
         self.trial_count = 0
@@ -74,9 +75,9 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
         self.random_iti_values = custom_random_iti(self.settings.N_trials, 1, self.settings.lambda_param)
 
         print("block_duration_vec: ", self.block_duration_vec)
-        #print("probs_vector: ", self.probs_vector)
-        #print("reward_side_vec_fixed_prob: ", self.reward_side_vec_fixed_prob)
-        #print("Tailored ITI values: ", self.random_iti_values)
+        print("probs_vector: ", self.probs_vector)
+        print("reward_side_vec_fixed_prob: ", self.reward_side_vec_fixed_prob)
+        print("Tailored ITI values: ", self.random_iti_values)
 
     def create_trial(self):
 
@@ -93,18 +94,16 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
         print("reward_side_number: ", self.reward_side_number)
         #print("ITI_duration: ", self.random_iti)
             
-        # Correct and wrong choices definition
-        if self.reward_side_number == 0:  # 0  for reward on the left side
+        if self.reward_side_number == 0:  # left
             self.correct_side = "left"
             self.wrong_side = "right"
-            self.correct_side = self.side
             self.correct_poke = self.ports.left_poke
             self.wrong_poke = self.ports.right_poke
             self.valvetime = self.ports.valve_l_time
             self.valve_action = self.ports.valve_l_reward
 
-        else:  # 1 for reward on the right side
-            self.correct_side = self.side
+        else:  # right
+            self.correct_side = "right"
             self.wrong_side = "left"
             self.correct_poke = self.ports.right_poke
             self.wrong_poke = self.ports.left_poke
@@ -159,38 +158,84 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
 
 
     def after_trial(self):
-        # Relevant prints
-        print(self.trial_data)
+  
+    # print(self.trial_data)
 
-        # register how much water was delivered
-        water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
+        # --- LOCAL helpers :  ---
+        def _event_key(ev):
+            
+            return ev.name if hasattr(ev, "name") else str(ev)
 
-        if water_delivered:
-            self.register_value('water', self.settings.volume)
+        def _first_choice_after(t0, left_key: str, right_key: str):
+            """Ritorna ('left'|'right', t_choice) del primo poke dopo t0, altrimenti (None, None)."""
+            L = [t for t in self.trial_data.get(left_key,  []) if t >= t0]
+            R = [t for t in self.trial_data.get(right_key, []) if t >= t0]
+            tL = L[0] if L else None
+            tR = R[0] if R else None
+            if tL is None and tR is None:
+                return None, None
+            if tL is None:
+                return "right", tR
+            if tR is None:
+                return "left", tL
+            return ("left", tL) if tL <= tR else ("right", tR)
+
+        # 1) timestamp side LED ON (start)
+        side_on_key = "STATE_side_led_on_START"
+        t_side_on = self.trial_data[side_on_key][0] if side_on_key in self.trial_data and self.trial_data[side_on_key] else None
+
+        # 2) events keys poke L/R
+        left_key  = _event_key(self.ports.left_poke)   # es. "Port5In" / "Port2In" / ...
+        right_key = _event_key(self.ports.right_poke)  # es. "Port1In" / "Port5In" / ...
+
+        # 3) frist choice after LED on
+        if t_side_on is not None:
+            first_resp, t_choice = _first_choice_after(t_side_on, left_key, right_key)
         else:
-            self.register_value('water', 0)
+            first_resp, t_choice = (None, None)
 
-        # get the outcome of the trial
+        # 4) Rewarded trial (0=left, 1=right)
+        rewarded_side = "right" if int(self.reward_side_number) == 1 else "left"
+
+        # 5) outcome  CHOSEN SIDE -> 'side'
+        if first_resp is None:
+            chosen_side = "none"
+            correct_outcome_int = 0
+            behavioral_outcome  = "miss"
+        else:
+            chosen_side = first_resp
+            correct_outcome_int = int(chosen_side == rewarded_side)
+            behavioral_outcome  = "correct" if correct_outcome_int else "incorrect"
+
+        # --- REGISTRATION ---
+        # NB: 'side' = MOUSE CHOICE (left/right/none)
+        self.register_value('side', chosen_side)
+        self.register_value('rewarded_side', rewarded_side)
+        self.register_value('correct_outcome_int', correct_outcome_int)
+        if t_choice is not None:
+            self.register_value('first_trial_response_time', t_choice)
+
+        # register how much water was delivered 
+        water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
+        self.register_value('water', self.settings.volume if water_delivered else 0)
+
+        # outcome 
         if 'STATE_water_delivery_START' in self.current_trial_states and len(self.current_trial_states['STATE_water_delivery_START']) > 0:
             water_delivery_start = self.current_trial_states['STATE_water_delivery_START'][0]
-
             if water_delivery_start > 0:
                 self.outcome = "correct"
         elif 'STATE_wrong_side_START' in self.current_trial_states and len(self.current_trial_states['STATE_wrong_side_START']) > 0:
-            wrong_side = self.current_trial_states['STATE_wrong_side_START'][0]
-
+            wrong_side = self.current_trial_states['STATE_wrong_side'][0]
             if wrong_side > 0:
                 self.outcome = "incorrect"
         elif 'STATE_side_LED_on_START' in self.current_trial_states and len(self.current_trial_states['STATE_side_LED_on_START']) > 0:
             side_light_start = self.current_trial_states['STATE_side_LED_on_START'][0]
-
             if side_light_start > 0:
                 self.outcome = "miss"
         else:
-
             self.outcome = "omission"
 
-        self.register_value('side', self.side)
+        # OTHER REGISTRATIONS
         self.register_value('correct_poke', self.correct_poke)
         self.register_value('probability_r', self.probability)
         self.register_value('Block_index', self.block_identity)
@@ -200,6 +245,7 @@ MEAN ITI DISTRIBUTION = 5 seconds UP TO 30 seconds
         self.register_value('list_prob_R_values', self.settings.prob_right_values)
         self.register_value('outcome', self.outcome)
         self.register_value('iti_duration', self.random_iti)
+
 
     def close(self):
         pass

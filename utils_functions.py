@@ -48,7 +48,6 @@ def generate_uniform_block_duration(x_type, mean_x, N_blocks):
     return x.flatten()
 
 
-
 def generate_block_probs_vec(N_blocks, prob_block_type, p_list, prob_Left_Right_blocks):
     """
     Generates the reward probabilities (pR) for each block.
@@ -114,7 +113,7 @@ def generate_block_probs_vec(N_blocks, prob_block_type, p_list, prob_Left_Right_
     output_probs_vec[rdm_right_block_order[0]::2] = prob_list_Right_blocks
     output_probs_vec[rdm_right_block_order[1]::2] = prob_list_Left_blocks
 
-    return output_probs_vec     
+    return output_probs_vec        
 
 
 
@@ -193,6 +192,8 @@ def custom_random_iti(num_trials, num_values_per_trial, lambda_param):
         all_values.extend(trial_values)
     return all_values
 
+
+    
 # ----------------------------------PLOTTING FUNCTIONS----------------------------------------
 
 def assign_ports(df: pd.DataFrame) -> pd.DataFrame:

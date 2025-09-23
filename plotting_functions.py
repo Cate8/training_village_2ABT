@@ -441,6 +441,7 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
         elif row["first_trial_response"] == "right":
             ax.plot(row["trial"], 1.15 if correct else 1.35, '|', color="purple", markersize=15 if correct else 5)
 
+
     # Draw block probability bars
     if "Block_index" in df.columns:
         unique_blocks = df["Block_index"].unique()
@@ -449,7 +450,7 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
             start, end = block_data["trial"].min(), block_data["trial"].max()
             block_prob = block_data["probability_r"].iloc[0]
             color = "purple" if block_prob > 0.5 else "green" if block_prob < 0.5 else "blue"
-            ax.hlines(y=1.5, xmin=start, xmax=end, colors=color, linewidth=10)
+            ax.hlines(y=1.7, xmin=start, xmax=end, colors=color, linewidth=10)
             ax.text((start + end) / 2, 1.6, f"{block_prob:.2f}", ha="center", va="center",
                     fontsize=6, backgroundcolor="white")
 
