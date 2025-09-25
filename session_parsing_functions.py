@@ -114,26 +114,10 @@ def parse_data_S1_S2(df: pd.DataFrame) -> pd.DataFrame:
     df['duration_led_on'] = df.get('STATE_led_on_END', 0) - df.get('STATE_led_on_START', 0)
     df['reaction_time'] = df.get('STATE_led_on_END', 0) - df.get('STATE_led_on_START', 0)
 
-    # First responses
-    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string) if 'right_poke_in' in df else None
-    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string) if 'left_poke_in' in df else None
-
-    left = df['first_response_left'].fillna(np.inf)
-    right = df['first_response_right'].fillna(np.inf)
-
-    conditions = [
-        df['first_response_left'].isna() & df['first_response_right'].isna(),
-        df['first_response_left'].isna(),
-        df['first_response_right'].isna(),
-        left <= right,
-        left > right,
-    ]
-    choices = ["no_response", "right", "left", "left", "right"]
-    df["first_trial_response"] = np.select(conditions, choices)
 
     # Outcome
     if 'rewarded_side' in df:
-        df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
+        df["correct_outcome_bool"] = df["response_side"] == df['rewarded_side']
         df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
         df["correct_outcome"] = np.where(df["correct_outcome_bool"], "correct", "incorrect")
         df["correct_outcome_int"] = np.where(df["correct_outcome_bool"], 1, 0)
@@ -188,27 +172,11 @@ def parse_S3_data(df: pd.DataFrame) -> pd.DataFrame:
     df['motor_time'] = df['STATE_side_led_on_END'] - df['STATE_side_led_on_START']
     df['reaction_time'] = df['STATE_c_led_on_END'] - df['STATE_c_led_on_START']  # or water_delivery if appropriate
 
-    # First responses
-    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string)
-    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string)
-    df['first_response_center'] = df['centre_poke_in'].apply(extract_first_from_list_string)
-
-    conditions = [
-        df['first_response_left'].isna() & df['first_response_right'].isna(),
-        df['first_response_left'].isna(),
-        df['first_response_right'].isna(),
-        df['first_response_left'] <= df['first_response_right'],
-        df['first_response_left'] > df['first_response_right'],
-    ]
-    choices = ["no_response", "right", "left", "left", "right"]
-    df["first_trial_response"] = np.select(conditions, choices)
-
-
     # Outcome
-    df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
+    df["correct_outcome_bool"] = df["response_side"] == df['rewarded_side']
     df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
-    df["correct_outcome"] = np.where(df["first_trial_response"] == df['rewarded_side'], "correct", "incorrect")
-    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df['rewarded_side'], 1, 0)
+    df["correct_outcome"] = np.where(df["response_side"] == df['rewarded_side'], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["response_side"] == df['rewarded_side'], 1, 0)
 
     # Summary stats
     df['reaction_time_median'] = df['reaction_time'].median()
@@ -242,26 +210,11 @@ def parse_S4_data(df: pd.DataFrame) -> pd.DataFrame:
     df['motor_time'] = df['STATE_side_led_on_END'] - df['STATE_side_led_on_START']
     df['reaction_time'] = df['STATE_c_led_on_END'] - df['STATE_c_led_on_START']  # or water_delivery if appropriate
 
-    # First responses
-    df['first_response_right'] = df['right_poke_in'].apply(extract_first_from_list_string)
-    df['first_response_left'] = df['left_poke_in'].apply(extract_first_from_list_string)
-    df['first_response_center'] = df['centre_poke_in'].apply(extract_first_from_list_string)
-
-    conditions = [
-        df['first_response_left'].isna() & df['first_response_right'].isna(),
-        df['first_response_left'].isna(),
-        df['first_response_right'].isna(),
-        df['first_response_left'] <= df['first_response_right'],
-        df['first_response_left'] > df['first_response_right'],
-    ]
-    choices = ["no_response", "right", "left", "left", "right"]
-    df["first_trial_response"] = np.select(conditions, choices)
-
     # Outcome
-    df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
+    df["correct_outcome_bool"] = df["response_side"] == df['rewarded_side']
     df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
-    df["correct_outcome"] = np.where(df["first_trial_response"] == df['rewarded_side'], "correct", "incorrect")
-    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df['rewarded_side'], 1, 0)
+    df["correct_outcome"] = np.where(df["response_side"] == df['rewarded_side'], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["response_side"] == df['rewarded_side'], 1, 0)
 
     # Summary stats
     df['reaction_time_median'] = df['reaction_time'].median()

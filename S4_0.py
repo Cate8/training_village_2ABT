@@ -228,7 +228,7 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         self.register_value('list_prob_R_values', self.settings.prob_right_values)
         self.register_value('outcome', outcome) # 'correct', 'incorrect', 'miss'
         self.register_value("rewarded_side", self.correct_side) # side that was rewarded this trial
-        self.register_value("response_side", first_resp) # side the animal chose
+        self.register_value("response_side", chosen_side) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
 
         print("registration")

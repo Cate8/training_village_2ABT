@@ -428,14 +428,31 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
     ax.plot(df["trial"], df["rolling_avg_right"], label="Right choice frequency",
             color="mediumturquoise", linewidth=2)
 
-    # Plot response ticks (green = left, purple = right)
-    for i, row in df.iterrows():
-        correct = row["correct_outcome_int"] == 1
-        if row["response_side"] == "right":
-            ax.plot(row["trial"], -0.15 if correct else -0.35, '|', color="green", markersize=15 if correct else 5)
-        elif row["response_side"] == "left":
-            ax.plot(row["trial"], 1.15 if correct else 1.35, '|', color="purple", markersize=15 if correct else 5)
+    df["first_resp_left"] = (df["response_side"] == "left").astype(int)
+    df["first_resp_right"] = (df["response_side"] == "right").astype(int)
+    df["omission"] = (df["outcome"] == "omission").astype(int)
+    df["miss"] = (df["outcome"] == "miss").astype(int)
 
+    # # Plot response ticks (green = left, purple = right)
+    # for i, row in df.iterrows():
+    #     correct = row["correct_outcome_int"] == 1
+    #     if row["response_side"] == "right":
+    #         ax.plot(row["trial"], -0.15 if correct else -0.35, '|', color="green", markersize=15 if correct else 5)
+    #     elif row["response_side"] == "left":
+    #         ax.plot(row["trial"], 1.15 if correct else 1.35, '|', color="purple", markersize=15 if correct else 5)
+
+    # --- Plot ticks ---
+    for i, row in df.iterrows():
+        if row["first_resp_right"]:
+            markersize = 15 if row["correct_outcome_int"] == 1 else 5
+            ax.plot(i + 1, 1.15 if markersize == 15 else 1.35, '|', color='purple', markersize=markersize)
+        if row["first_resp_left"]:
+            markersize = 15 if row["correct_outcome_int"] == 1 else 5
+            ax.plot(i + 1, -0.15 if markersize == 15 else -0.35, '|', color='green', markersize=markersize)
+        if row["omission"]:
+            ax.plot(i + 1, 0.5, 'o', color='black', markersize=5)
+        if row["miss"]:
+            ax.plot(i + 1, -0.35, 'o', color='black', markersize=5)
 
     # Draw block probability bars
     if "Block_index" in df.columns:
@@ -452,7 +469,7 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
         # Vertical lines for block changes
         changes = df["Block_index"].diff().fillna(0).ne(0)
         for trial in df[changes]["trial"]:
-            ax.axvline(x=trial, color="gray", linestyle="--")
+            ax.axvline(x=trial-0.5, color="gray", linestyle="--")
 
     # Axes formatting
     ax.set_ylim(-0.5, 1.7)
@@ -487,13 +504,14 @@ def plot_psychometric_curve(df, ax=None):
 
     # Ensure columns are float and clean
     df = df.copy()
+    df = df[df['response_side'].isin(['left', 'right'])]
     df['probability_r'] = df['probability_r'].astype(float)
     df['first_trial_response_num'] = df['response_side'].apply(lambda x: 1 if x == 'right' else 0)
 
     # Compute right choice rate per unique prob
     probs = np.sort(df['probability_r'].unique())
     right_choice_freq = [
-        df[df['probability_r'] == p]['response_side_num'].mean()
+        df[df['probability_r'] == p]['first_trial_response_num'].mean()
         for p in probs
     ]
 

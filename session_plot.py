@@ -79,15 +79,15 @@ class SessionPlot(SessionPlotFigureManager):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         pct_correct = round(n_correct / n_trials * 100, 2)
-        n_left = (df['first_trial_response'] == 'left').sum()
-        n_right = (df['first_trial_response'] == 'right').sum()
-        n_omit = (df['first_trial_response'] == 'no_response').sum()
+        n_left = (df['response_side'] == 'left').sum()
+        n_right = (df['response_side'] == 'right').sum()
+        n_miss = (df['outcome'] == 'miss').sum()
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
             f"Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-            f"Omissions: {n_omit} | Median RT: {rt_median} s"
+            f"Misses: {n_miss} | Median RT: {rt_median} s"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
@@ -143,15 +143,15 @@ class SessionPlot(SessionPlotFigureManager):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         pct_correct = round(n_correct / n_trials * 100, 2)
-        n_left = (df['first_trial_response'] == 'left').sum()
-        n_right = (df['first_trial_response'] == 'right').sum()
-        n_omit = (df['first_trial_response'] == 'no_response').sum()
+        n_left = (df['response_side'] == 'left').sum()
+        n_right = (df['response_side'] == 'right').sum()
+        n_miss = (df['outcome'] == 'miss').sum()
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
             f"Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-            f"Omissions: {n_omit} | Median RT: {rt_median} s"
+            f"Misses: {n_miss} | Median RT: {rt_median} s"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
@@ -221,15 +221,16 @@ class SessionPlot(SessionPlotFigureManager):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         pct_correct = round(n_correct / n_trials * 100, 2)
-        n_left = (df['first_trial_response'] == 'left').sum()
-        n_right = (df['first_trial_response'] == 'right').sum()
-        n_omit = (df['first_trial_response'] == 'no_response').sum()
+        n_left = (df['response_side'] == 'left').sum()
+        n_right = (df['response_side'] == 'right').sum()
+        n_omit = (df['outcome'] == 'omission').sum()
+        n_miss = (df['outcome'] == 'miss').sum()
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
             f"Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-            f"Omissions: {n_omit} | Median RT: {rt_median} s"
+            f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
@@ -274,15 +275,16 @@ class SessionPlot(SessionPlotFigureManager):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         pct_correct = round(n_correct / n_trials * 100, 2)
-        n_left = (df['first_trial_response'] == 'left').sum()
-        n_right = (df['first_trial_response'] == 'right').sum()
-        n_omit = (df['first_trial_response'] == 'no_response').sum()
+        n_left = (df['response_side'] == 'left').sum()
+        n_right = (df['response_side'] == 'right').sum()
+        n_omit = (df['outcome'] == 'omission').sum()
+        n_miss = (df['outcome'] == 'miss').sum()
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
             f"Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-            f"Omissions: {n_omit} | Median RT: {rt_median} s"
+            f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
