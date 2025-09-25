@@ -114,7 +114,7 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         
         print('')
         print('Trial: ' + str(self.current_trial))
-        print('Reward side: ' + str(self.side))
+        print('Reward side: ' + str(self.correct_side))
 
         self.bpod.add_state(
             state_name='c_led_on',
@@ -201,11 +201,11 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         if first_resp is None:
             chosen_side = "none"
             correct_outcome_int = 0
-            behavioral_outcome  = "miss"
+            outcome  = "miss"
         else:
             chosen_side = first_resp
             correct_outcome_int = int(chosen_side == rewarded_side)
-            behavioral_outcome  = "correct" if correct_outcome_int else "incorrect"
+            outcome  = "correct" if correct_outcome_int else "incorrect"
 
         # --- REGISTRATION ---
         # NB: 'side' = MOUSE CHOICE (left/right/none)
@@ -219,21 +219,7 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
         self.register_value('water', self.settings.volume if water_delivered else 0)
 
-        # outcome 
-        if 'STATE_water_delivery_START' in self.current_trial_states and len(self.current_trial_states['STATE_water_delivery_START']) > 0:
-            water_delivery_start = self.current_trial_states['STATE_water_delivery_START'][0]
-            if water_delivery_start > 0:
-                self.outcome = "correct"
-        elif 'STATE_wrong_side_START' in self.current_trial_states and len(self.current_trial_states['STATE_wrong_side_START']) > 0:
-            wrong_side = self.current_trial_states['STATE_wrong_side'][0]
-            if wrong_side > 0:
-                self.outcome = "incorrect"
-        elif 'STATE_side_LED_on_START' in self.current_trial_states and len(self.current_trial_states['STATE_side_LED_on_START']) > 0:
-            side_light_start = self.current_trial_states['STATE_side_LED_on_START'][0]
-            if side_light_start > 0:
-                self.outcome = "miss"
-        else:
-            self.outcome = "omission"
+    
 
         # OTHER REGISTRATIONS
         self.register_value('correct_poke', self.correct_poke)
@@ -243,8 +229,17 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         self.register_value('Prob_block_type', self.settings.prob_block_type)
         self.register_value('Probability_L_R_blocks', self.settings.prob_Left_Right_blocks)
         self.register_value('list_prob_R_values', self.settings.prob_right_values)
-        self.register_value('outcome', self.outcome)
+        self.register_value('outcome', self.outcome) # 'correct', 'incorrect', 'miss'
+        self.register_value("rewarded_side", self.correct_side) # side that was rewarded this trial
+        self.register_value("response_side", self.first_resp) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
+
+        print("registration")
+        print(f"  Rewarded side: {rewarded_side}")
+        print(f"  Response side: {self.first_resp}")
+        print(f"  Outcome: {outcome}")
+        print(f"  Probability right: {self.probability}")
+        print("")
 
 
     def close(self):
