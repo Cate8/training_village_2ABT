@@ -37,11 +37,10 @@ be registered but no reward will be delivered.
         - self.name: (str) the name of the task
         self.subject: (str) the name of the subject
         self.current_trial: (int) the current trial number starting from 1
-        self.current_trial_states: (list) information about the current trial
+        self.trial_data: (list) information about the current trial
         self.system_name: (str) the name of the system as defined in the
                                 tab settings of the GUI
         self.settings: (Settings object) the settings defined in training_settings.py
-        self.trial_data: (dict) information about the current trial
         self.force_stop: (bool) if made true the task will stop
         self.maximum_number_of_trials: int = 100000000
         self.chrono = time_utils.Chrono()
@@ -144,23 +143,25 @@ be registered but no reward will be delivered.
         an alarm will be triggered.
         This threshold can be adjusted in the Settings tab of the GUI.
         """
-        if 'STATE_left_poke_START' in self.current_trial_states:
-                self.outcome = "left_poke"
+        outcome = "miss"
 
-        if 'STATE_centre_poke_START' in self.current_trial_states:
-                self.outcome = "center_poke"
-        
-        if 'STATE_right_poke_START' in self.current_trial_states:
-                self.outcome = "right_poke"
-    
-        else: 
-            self.outcome = "no_action"
+        state = self.trial_data.get("STATE_left_poke_START")
+        if state and len(state) > 0 and state[0] > 0:
+             outcome = "left_poke"
+
+        state = self.trial_data.get("STATE_centre_poke_START")
+        if state and len(state) > 0 and state[0] > 0:
+             outcome = "center_poke"
+
+        state = self.trial_data.get("STATE_right_poke_START")
+        if state and len(state) > 0 and state[0] > 0:
+             outcome = "right_poke"
 
         # Register the outcome of the trial
         self.register_value('poke_l', self.ports.left_poke)
         self.register_value('poke_c', self.ports.center_poke)
         self.register_value('poke_r', self.ports.right_poke)
-        self.register_value('outcome', self.outcome)
+        self.register_value('outcome', outcome)
 
     def close(self):
         """

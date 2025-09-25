@@ -132,13 +132,13 @@ def parse_data_S1_S2(df: pd.DataFrame) -> pd.DataFrame:
     df["first_trial_response"] = np.select(conditions, choices)
 
     # Outcome
-    if 'side' in df:
-        df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+    if 'rewarded_side' in df:
+        df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
         df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
         df["correct_outcome"] = np.where(df["correct_outcome_bool"], "correct", "incorrect")
         df["correct_outcome_int"] = np.where(df["correct_outcome_bool"], 1, 0)
     else:
-        print("[parse_data] Warning: 'side' column not found, skipping outcome computation.")
+        print("[parse_data] Warning: 'rewarded_side' column not found, skipping outcome computation.")
         df["correct_outcome_bool"] = False
         df["correct_outcome"] = "unknown"
         df["correct_outcome_int"] = 0
@@ -147,8 +147,8 @@ def parse_data_S1_S2(df: pd.DataFrame) -> pd.DataFrame:
     # Summary stats
     df['reaction_time_median'] = df['reaction_time'].median()
     df['tot_correct_choices'] = df['correct_outcome_int'].sum()
-    df['right_choices'] = (df['side'] == 'right').sum() if 'side' in df else 0
-    df['left_choices'] = (df['side'] == 'left').sum() if 'side' in df else 0
+    df['right_choices'] = (df['rewarded_side'] == 'right').sum() if 'rewarded_side' in df else 0
+    df['left_choices'] = (df['rewarded_side'] == 'left').sum() if 'rewarded_side' in df else 0
 
     return df
 
@@ -203,17 +203,18 @@ def parse_S3_data(df: pd.DataFrame) -> pd.DataFrame:
     choices = ["no_response", "right", "left", "left", "right"]
     df["first_trial_response"] = np.select(conditions, choices)
 
+
     # Outcome
-    df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+    df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
     df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
-    df["correct_outcome"] = np.where(df["first_trial_response"] == df["side"], "correct", "incorrect")
-    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df["side"], 1, 0)
+    df["correct_outcome"] = np.where(df["first_trial_response"] == df['rewarded_side'], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df['rewarded_side'], 1, 0)
 
     # Summary stats
     df['reaction_time_median'] = df['reaction_time'].median()
     df['tot_correct_choices'] = df['correct_outcome_int'].sum()
-    df['right_choices'] = (df['side'] == 'right').sum()
-    df['left_choices'] = (df['side'] == 'left').sum()
+    df['right_choices'] = (df['rewarded_side'] == 'right').sum()
+    df['left_choices'] = (df['rewarded_side'] == 'left').sum()
     return df
 
 
@@ -257,16 +258,16 @@ def parse_S4_data(df: pd.DataFrame) -> pd.DataFrame:
     df["first_trial_response"] = np.select(conditions, choices)
 
     # Outcome
-    df["correct_outcome_bool"] = df["first_trial_response"] == df["side"]
+    df["correct_outcome_bool"] = df["first_trial_response"] == df['rewarded_side']
     df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
-    df["correct_outcome"] = np.where(df["first_trial_response"] == df["side"], "correct", "incorrect")
-    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df["side"], 1, 0)
+    df["correct_outcome"] = np.where(df["first_trial_response"] == df['rewarded_side'], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["first_trial_response"] == df['rewarded_side'], 1, 0)
 
     # Summary stats
     df['reaction_time_median'] = df['reaction_time'].median()
     df['tot_correct_choices'] = df['correct_outcome_int'].sum()
-    df['right_choices'] = (df['side'] == 'right').sum()
-    df['left_choices'] = (df['side'] == 'left').sum()
+    df['right_choices'] = (df['rewarded_side'] == 'right').sum()
+    df['left_choices'] = (df['rewarded_side'] == 'left').sum()
     return df
 
 def probit(x, beta, alpha):

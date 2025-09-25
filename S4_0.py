@@ -159,11 +159,8 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
 
     def after_trial(self):
   
-    # print(self.trial_data)
-
         # --- LOCAL helpers :  ---
         def _event_key(ev):
-            
             return ev.name if hasattr(ev, "name") else str(ev)
 
         def _first_choice_after(t0, left_key: str, right_key: str):
@@ -202,26 +199,26 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
             chosen_side = "none"
             correct_outcome_int = 0
             outcome  = "miss"
+            water = 0
         else:
             chosen_side = first_resp
             correct_outcome_int = int(chosen_side == rewarded_side)
-            outcome  = "correct" if correct_outcome_int else "incorrect"
+            outcome = "correct" if correct_outcome_int else "incorrect"
+            water = self.settings.volume if correct_outcome_int else 0
+
+
+        first_poke = self.trial_data.get('STATE_side_led_on_START')
+        if first_poke and len(first_poke) > 0 and first_poke[0] > 0:
+            pass
+        else:
+            outcome = "omission"
+
 
         # --- REGISTRATION ---
-        # NB: 'side' = MOUSE CHOICE (left/right/none)
-        self.register_value('side', chosen_side)
-        self.register_value('rewarded_side', rewarded_side)
-        self.register_value('correct_outcome_int', correct_outcome_int)
         if t_choice is not None:
             self.register_value('first_trial_response_time', t_choice)
 
-        # register how much water was delivered 
-        water_delivered = self.trial_data.get("STATE_water_delivery_START", False)
-        self.register_value('water', self.settings.volume if water_delivered else 0)
-
-    
-
-        # OTHER REGISTRATIONS
+        self.register_value('water', water)
         self.register_value('correct_poke', self.correct_poke)
         self.register_value('probability_r', self.probability)
         self.register_value('Block_index', self.block_identity)
@@ -229,14 +226,14 @@ MEAN ITI DISTRIBUTION = 2 seconds UP TO 30 seconds
         self.register_value('Prob_block_type', self.settings.prob_block_type)
         self.register_value('Probability_L_R_blocks', self.settings.prob_Left_Right_blocks)
         self.register_value('list_prob_R_values', self.settings.prob_right_values)
-        self.register_value('outcome', self.outcome) # 'correct', 'incorrect', 'miss'
+        self.register_value('outcome', outcome) # 'correct', 'incorrect', 'miss'
         self.register_value("rewarded_side", self.correct_side) # side that was rewarded this trial
-        self.register_value("response_side", self.first_resp) # side the animal chose
+        self.register_value("response_side", first_resp) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
 
         print("registration")
         print(f"  Rewarded side: {rewarded_side}")
-        print(f"  Response side: {self.first_resp}")
+        print(f"  Response side: {first_resp}")
         print(f"  Outcome: {outcome}")
         print(f"  Probability right: {self.probability}")
         print("")

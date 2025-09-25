@@ -249,19 +249,19 @@ def plot_psychometric_curves(df, axes):
             group = df_day[df_day['task'] == task].copy()
 
             group['probability_r'] = group['probability_r'].astype(float)
-            group['first_trial_response'] = group['first_trial_response'].apply(lambda x: 1 if x == 'right' else 0)
+            group['response_side'] = group['response_side'].apply(lambda x: 1 if x == 'right' else 0)
 
             probs = np.sort(group['probability_r'].unique())
             right_choice_freq = []
             for prob in probs:
                 mask_prob = group['probability_r'] == prob
                 n_trials = mask_prob.sum()
-                n_right = (mask_prob & (group['first_trial_response'] == 1)).sum()
+                n_right = (mask_prob & (group['response_side'] == 1)).sum()
                 right_choice_freq.append(n_right / n_trials if n_trials > 0 else np.nan)
 
             # Fit probit
             try:
-                pars, _ = curve_fit(probit, group['probability_r'], group['first_trial_response'], p0=[0, 1])
+                pars, _ = curve_fit(probit, group['probability_r'], group['response_side'], p0=[0, 1])
                 x = np.linspace(0, 1, 100)
                 ax.plot(x, probit(x, *pars), label=task, color=task_colors[task], linewidth=2)
             except RuntimeError:
@@ -314,8 +314,8 @@ def plot_correct_choice_curves(df, axes):
     df['prob_rwd_correct_resp'] = np.where(df['probability_r'] >= 0.5, df['probability_r'], 1 - df['probability_r']).astype(float)
 
     df['high_choice'] = (
-        ((df['first_trial_response'] == 'right') & (df['probability_r'] > df['probability_l'])) |
-        ((df['first_trial_response'] == 'left') & (df['probability_l'] > df['probability_r']))
+        ((df['response_side'] == 'right') & (df['probability_r'] > df['probability_l'])) |
+        ((df['response_side'] == 'left') & (df['probability_l'] > df['probability_r']))
     ).astype(int)
 
     last_five_dates = df['date'].dropna().unique()[-5:]
@@ -394,10 +394,10 @@ def plot_aggregate_psychometric_right_choice(df, ax):
         return
 
     df_agg['probability_r'] = df_agg['probability_r'].astype(float)
-    df_agg['first_trial_response'] = df_agg['first_trial_response'].apply(lambda x: 1 if x == 'right' else 0)
+    df_agg['response_side'] = df_agg['response_side'].apply(lambda x: 1 if x == 'right' else 0)
 
     # Raggruppa per probability_r → media e SEM sulle risposte right
-    grouped = df_agg.groupby('probability_r')['first_trial_response'].agg(['mean', 'std', 'count']).reset_index()
+    grouped = df_agg.groupby('probability_r')['response_side'].agg(['mean', 'std', 'count']).reset_index()
     grouped['sem'] = grouped['std'] / grouped['count']**0.5
 
     # Fit sulla media dei punti
@@ -441,8 +441,8 @@ def plot_aggregate_correct_choice_mean(df, ax):
 
     # Calcola correct responses
     df['high_choice'] = (
-        ((df['first_trial_response'] == 'right') & (df['probability_r'] > df['probability_l'])) |
-        ((df['first_trial_response'] == 'left') & (df['probability_l'] > df['probability_r']))
+        ((df['response_side'] == 'right') & (df['probability_r'] > df['probability_l'])) |
+        ((df['response_side'] == 'left') & (df['probability_l'] > df['probability_r']))
     ).astype(int)
 
     # Ultimi 15 giorni
@@ -499,7 +499,7 @@ def plot_aggregate_psychometric_right_choice_by_iti(df, ax):
 
     # Prepara colonne e variabili
     df_agg['probability_r'] = df_agg['probability_r'].astype(float)
-    df_agg['right_choice'] = np.where(df_agg['first_trial_response'] == 'right', 1, 0)
+    df_agg['right_choice'] = np.where(df_agg['response_side'] == 'right', 1, 0)
     df_agg['prob_rwd_correct_resp'] = np.where(df_agg['probability_r'] >= 0.5, df_agg['probability_r'], 1 - df_agg['probability_r'])
 
     df_agg['prev_iti_duration'] = df_agg['iti_duration'].shift(1)
@@ -577,8 +577,8 @@ def plot_aggregate_correct_choice_by_iti(df, ax):
     df_agg['prob_rwd_correct_resp'] = np.where(df_agg['probability_r'] >= 0.5, df_agg['probability_r'], 1 - df_agg['probability_r'])
 
     df_agg['high_choice'] = (
-        ((df_agg['first_trial_response'] == 'right') & (df_agg['probability_r'] > df_agg['probability_l'])) |
-        ((df_agg['first_trial_response'] == 'left') & (df_agg['probability_l'] > df_agg['probability_r']))
+        ((df_agg['response_side'] == 'right') & (df_agg['probability_r'] > df_agg['probability_l'])) |
+        ((df_agg['response_side'] == 'left') & (df_agg['probability_l'] > df_agg['probability_r']))
     ).astype(int)
 
     df_agg['prev_iti_duration'] = df_agg['iti_duration'].shift(1)
@@ -646,8 +646,8 @@ def plot_behavior_around_block_change(df, ax):
 
     # Definisci la scelta corretta in base alla porta col reward maggiore
     df['high_choice'] = (
-        ((df['first_trial_response'] == 'right') & (df['probability_r'] > 0.5)) |
-        ((df['first_trial_response'] == 'left') & (df['probability_r'] < 0.5))
+        ((df['response_side'] == 'right') & (df['probability_r'] > 0.5)) |
+        ((df['response_side'] == 'left') & (df['probability_r'] < 0.5))
     ).astype(int)
 
     block_positions, high_choices = [], []

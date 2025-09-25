@@ -64,9 +64,10 @@ def plot_session_summary(ax, df):
     n_trials = len(df)
     n_correct = df['correct_outcome_int'].sum()
     pct_correct = round(n_correct / n_trials * 100, 2)
-    n_left = (df['first_trial_response'] == 'left').sum()
-    n_right = (df['first_trial_response'] == 'right').sum()
-    n_omit = (df['first_trial_response'] == 'no_response').sum()
+    n_left = (df['response_side'] == 'left').sum()
+    n_right = (df['response_side'] == 'right').sum()
+    n_omit = (df['outcome'] == 'omission').sum()
+    n_miss = (df['outcome'] == 'miss').sum()
     rt_median = round(df['reaction_time'].median(), 2)
     session_duration_min = round(df['session_duration'].iloc[0], 1)
 
@@ -74,7 +75,7 @@ def plot_session_summary(ax, df):
     summary_text = (
         f"Total trials: {n_trials} | Session: {session_duration_min} min | "
         f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-        f"Omissions: {n_omit} | Median RT: {rt_median} s"
+        f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s"
     )
 
     # Disable axis and display the text
@@ -83,8 +84,8 @@ def plot_session_summary(ax, df):
 
 def plot_first_poke_side(ax, df):
     """Plot first poke side by outcome on the given axis."""
-    response_map = {"left": -1, "right": 1, "no_response": 0}
-    df["first_trial_response_num"] = df["first_trial_response"].map(response_map)
+    response_map = {"left": -1, "right": 1, "none": 0}
+    df["first_trial_response_num"] = df["response_side"].map(response_map)
 
     df['outcome_labels'] = np.where(df['correct_outcome_int'] == 1, 'correct',
                                     np.where(df['correct_outcome_int'].isna(), 'unknown', 'incorrect'))
@@ -240,24 +241,14 @@ def plot_right_reward_probability(df, ax=None):
     df = df.replace(np.nan, 0)
 
     df['rolling_prob'] = df['correct_outcome_int'].rolling(window=5, min_periods=1).mean()
-    df['right_rewards'] = ((df['side'] == 'right') & (df['correct_outcome_int'] == 1)).astype(int)
+    df['right_rewards'] = ((df['rewarded_side'] == 'right') & (df['correct_outcome_int'] == 1)).astype(int)
     df['rolling_avg_right_reward'] = df["right_rewards"].rolling(window=5, min_periods=1).mean()
 
-    left = df['first_response_left'].fillna(np.inf)
-    right = df['first_response_right'].fillna(np.inf)
+    df["first_resp_left"] = (df["response_side"] == "left").astype(int)
+    df["first_resp_right"] = (df["response_side"] == "right").astype(int)
+    df["omission"] = (df["outcome"] == "omission").astype(int)
+    df["miss"] = (df["outcome"] == "miss").astype(int)
 
-    conditions = [
-        df['first_response_left'].isna() & df['first_response_right'].isna(),
-        df['first_response_left'].isna(),
-        df['first_response_right'].isna(),
-        left <= right,
-        left > right,
-    ]
-    choices = ["no_response", "right", "left", "left", "right"]
-    df["first_trial_response"] = np.select(conditions, choices)
-
-    df["first_resp_left"] = (df["first_trial_response"] == "left").astype(int)
-    df["first_resp_right"] = (df["first_trial_response"] == "right").astype(int)
 
     # --- Plot rolling prob curve ---
     ax.plot(df["trial"], df["rolling_avg_right_reward"], color='mediumturquoise', linewidth=1, label='Rolling P(right reward)', linestyle='-')
@@ -270,13 +261,17 @@ def plot_right_reward_probability(df, ax=None):
 
     # --- Plot ticks ---
     for i, row in df.iterrows():
-        if row["first_resp_left"]:
-            markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            ax.plot(i, 1.15 if markersize == 15 else 1.35, '|', color='purple', markersize=markersize)
         if row["first_resp_right"]:
             markersize = 15 if row["correct_outcome_int"] == 1 else 5
-            ax.plot(i, -0.15 if markersize == 15 else -0.35, '|', color='green', markersize=markersize)
-
+            ax.plot(i + 1, 1.15 if markersize == 15 else 1.35, '|', color='purple', markersize=markersize)
+        if row["first_resp_left"]:
+            markersize = 15 if row["correct_outcome_int"] == 1 else 5
+            ax.plot(i + 1, -0.15 if markersize == 15 else -0.35, '|', color='green', markersize=markersize)
+        if row["omission"]:
+            ax.plot(i + 1, 0.5, 'o', color='black', markersize=5)
+        if row["miss"]:
+            ax.plot(i + 1, -0.35, 'o', color='black', markersize=5)
+        
     # --- SIDE LABLES ---
     ax.text(1.02, 0.1, 'L', ha='left', va='top', color='green', transform=ax.transAxes, fontsize=10)
     ax.text(1.02, 0.9, 'R', ha='left', va='bottom', color='purple', transform=ax.transAxes, fontsize=10)
@@ -422,7 +417,7 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
     df = df.replace(np.nan, 0)
 
     # Rolling average of right choices
-    df["right_choice"] = (df["first_trial_response"] == "right").astype(int)
+    df["right_choice"] = (df["response_side"] == "right").astype(int)
     df["rolling_avg_right"] = df["right_choice"].rolling(window=5, min_periods=1).mean()
 
     # Plot expected probability of reward
@@ -436,9 +431,9 @@ def plot_probability_right_reward_S4(df: pd.DataFrame, ax=None) -> plt.Axes:
     # Plot response ticks (green = left, purple = right)
     for i, row in df.iterrows():
         correct = row["correct_outcome_int"] == 1
-        if row["first_trial_response"] == "right":
+        if row["response_side"] == "right":
             ax.plot(row["trial"], -0.15 if correct else -0.35, '|', color="green", markersize=15 if correct else 5)
-        elif row["first_trial_response"] == "left":
+        elif row["response_side"] == "left":
             ax.plot(row["trial"], 1.15 if correct else 1.35, '|', color="purple", markersize=15 if correct else 5)
 
 
@@ -493,12 +488,12 @@ def plot_psychometric_curve(df, ax=None):
     # Ensure columns are float and clean
     df = df.copy()
     df['probability_r'] = df['probability_r'].astype(float)
-    df['first_trial_response_num'] = df['first_trial_response'].apply(lambda x: 1 if x == 'right' else 0)
+    df['first_trial_response_num'] = df['response_side'].apply(lambda x: 1 if x == 'right' else 0)
 
     # Compute right choice rate per unique prob
     probs = np.sort(df['probability_r'].unique())
     right_choice_freq = [
-        df[df['probability_r'] == p]['first_trial_response_num'].mean()
+        df[df['probability_r'] == p]['response_side_num'].mean()
         for p in probs
     ]
 
