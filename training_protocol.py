@@ -222,8 +222,8 @@ class TrainingProtocol(Training):
                 n_trials_S4_0 = df_last_two_session_S4_0.trial.sum()
                 if n_trials_S4_0 >= 250:
                     self.settings.next_task = "S4_0"
-                    self.settings.minimum_duration = 30 * 60
-                    self.settings.maximum_duration = 45 * 60
+                    self.settings.minimum_duration = 45 * 60
+                    self.settings.maximum_duration = 50 * 60
                     self.settings.volume = 3
                     self.settings.trials_with_same_side = 30 
                     self.settings.c_led_on_time = 5 * 60 
@@ -231,7 +231,7 @@ class TrainingProtocol(Training):
                     self.settings.penalty_time = 0
                     self.settings.drink_delay_time = 5
 
-                    self.settings.prob_right_values = [0.9, 0.8]  
+                    self.settings.prob_right_values = [0.9]  
                     self.settings.block_type = "fixed" 
                     self.settings.prob_block_type = 'permutation_prob_list'
                     self.settings.prob_Left_Right_blocks = 'balanced'
