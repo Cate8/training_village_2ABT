@@ -224,7 +224,7 @@ class TrainingProtocol(Training):
                     self.settings.next_task = "S4_0"
                     self.settings.minimum_duration = 45 * 60
                     self.settings.maximum_duration = 50 * 60
-                    self.settings.volume = 3
+                    self.settings.volume = 2
                     self.settings.trials_with_same_side = 30 
                     self.settings.c_led_on_time = 5 * 60 
                     self.settings.led_on_time = 5 * 60 
@@ -253,7 +253,7 @@ class TrainingProtocol(Training):
         #             self.settings.next_task = "S4_2"
         #             self.settings.minimum_duration = 30 * 60
         #             self.settings.maximum_duration = 45 * 60
-        #             self.settings.volume = 3
+        #             self.settings.volume = 2
         #             self.settings.trials_with_same_side = 30
         #             self.settings.c_led_on_time = 5 * 60 
         #             self.settings.led_on_time = 5 * 60 
@@ -280,7 +280,7 @@ class TrainingProtocol(Training):
         #             self.settings.next_task = "S4_3"
         #             self.settings.minimum_duration = 30 * 60
         #             self.settings.maximum_duration = 45 * 60
-        #             self.settings.volume = 3
+        #             self.settings.volume = 2
         #             self.settings.trials_with_same_side = 30
         #             self.settings.c_led_on_time = 5 * 60 
         #             self.settings.led_on_time = 5 * 60 
