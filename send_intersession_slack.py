@@ -236,7 +236,10 @@ def send_slack_plots() -> None:
             continue
 
         print(f"[.] {animal_name}: generating plot → {output_pdf.name}")
-        plot_dataframe(df, f"{animal_name} ({DATE_STR})", output_pdf)
+        try:
+            plot_dataframe(df, f"{animal_name} ({DATE_STR})", output_pdf)
+        except Exception as e:
+            print(e)
 
         slack_spam(
             msg=f"Intersession for {animal_name}",
