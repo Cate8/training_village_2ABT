@@ -33,7 +33,7 @@ This task implements a version of the probabilistic two-alternative forced choic
 -----------------------------------------------------------------------------------
 Task Variables:  
 PROBABILITIES = [0.9, 0.1, 0.8, 0.2]  
-BLOCK TYPE = uniform, 30 trials
+BLOCK TYPE = exponential,from 20 and 55 trials
 MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
 """
     def start(self):

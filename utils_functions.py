@@ -42,7 +42,7 @@ def generate_uniform_block_duration(x_type, mean_x, N_blocks):
         x[0:] = mean_x
     elif x_type == "exp":
         mean_x = None 
-        x = np.random.uniform(20, 55, (int(N_blocks), 1)).astype(int)
+        x = np.random.uniform(20, 50, (int(N_blocks), 1)).astype(int)
     else:
         Warning('Blocked type not supported')
     return x.flatten()
