@@ -3,7 +3,7 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from village.classes.plot import SubjectPlotFigureManager
+from village.custom_classes.subject_plot_base import SubjectPlotBase
 from plotting_functions import *
 from session_parsing_functions import *
 from subject_plotting_function import *
@@ -21,7 +21,7 @@ from scipy import stats
 from matplotlib.lines import Line2D
 import ast
 
-class SubjectPlot(SubjectPlotFigureManager):
+class SubjectPlot(SubjectPlotBase):
     def __init__(self) -> None:
         super().__init__()
 

@@ -1,6 +1,6 @@
 import random
 from BpodPorts import BpodPorts
-from village.classes.task import Event, Output, Task
+from village.custom_classes.task import Event, Output, Task
 
 
 class Port_test(Task):

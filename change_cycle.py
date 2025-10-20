@@ -8,14 +8,14 @@ from pathlib import Path
 
 from village.scripts.safe_removal_of_data import main as safe_removal_script
 from village.settings import Active, settings
-from village.classes.change_cycle_run import ChangeCycleRun
-from village.log import log
+from village.custom_classes.change_cycle_base import ChangeCycleBase
+from village.scripts.log import log
 from send_intersession_slack import send_slack_plots
 import time
 import traceback
 
 
-class ChangeCycle(ChangeCycleRun):
+class ChangeCycle(ChangeCycleBase):
     def __init__(self) -> None:
         super().__init__()
 

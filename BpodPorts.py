@@ -1,4 +1,4 @@
-from village.classes.task import Event, Output
+from village.custom_classes.task import Event, Output
 
 class BpodPorts:
     __slots__ = (

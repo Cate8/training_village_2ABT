@@ -3,7 +3,6 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from village.classes.plot import SubjectPlotFigureManager
 from plotting_functions import *
 from session_parsing_functions import *
 import matplotlib.pyplot as plt

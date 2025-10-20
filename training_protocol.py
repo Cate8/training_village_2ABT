@@ -1,7 +1,7 @@
-from village.classes.training import Training
+from village.custom_classes.training_protocol_base import TrainingProtocolBase
 
 
-class TrainingProtocol(Training):
+class TrainingProtocol(TrainingProtocolBase):
     """
     This class defines how the training protocol is going to be.
     This is, how variables change depending on different conditions (e.g. performance),

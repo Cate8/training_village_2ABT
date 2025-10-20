@@ -8,12 +8,12 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import ast
-from village.classes.plot import SessionPlotFigureManager
+from village.custom_classes.session_plot_base import SessionPlotBase
 from plotting_functions import *
 from session_parsing_functions import *
 
 
-class SessionPlot(SessionPlotFigureManager):
+class SessionPlot(SessionPlotBase):
     def __init__(self) -> None:
         super().__init__()
 

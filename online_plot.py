@@ -1,12 +1,13 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-from village.classes.plot import OnlinePlotFigureManager
+from village.custom_classes.online_plot_base import OnlinePlotBase
 
 
-class OnlinePlot(OnlinePlotFigureManager):
+class OnlinePlot(OnlinePlotBase):
     def __init__(self) -> None:
         super().__init__()
+        self.fig = plt.figure(figsize=(10, 8))
         self.ax1 = self.fig.add_subplot(1, 2, 1)
         self.ax2 = self.fig.add_subplot(1, 2, 2)
 

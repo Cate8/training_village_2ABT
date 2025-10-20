@@ -1,6 +1,6 @@
 import random
 
-from village.classes.task import Event, Output, Task
+from village.custom_classes.task import Event, Output, Task
 import random
 import numpy as np
 from scipy.signal import firwin, lfilter 
