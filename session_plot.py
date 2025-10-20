@@ -20,6 +20,7 @@ class SessionPlot(SessionPlotBase):
     def create_plot(
         self,
         df: pd.DataFrame,
+        weight: float = 0.0,
         width: float = 10,
         height: float = 8,
     ) -> Figure:

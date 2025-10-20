@@ -25,7 +25,7 @@ class SubjectPlot(SubjectPlotBase):
     def __init__(self) -> None:
         super().__init__()
 
-    def create_plot(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
+    def create_plot(self, df: pd.DataFrame, summary_df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
         plt.rcParams.update({'font.size': 6, 'font.family': 'monospace'})
         fig = plt.figure(figsize=(width, height))
         df = assign_ports(df)
