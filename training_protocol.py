@@ -43,7 +43,7 @@ class TrainingProtocol(TrainingProtocolBase):
         # Settings in this block are mandatory for everything
         # that runs on Traning Village
         # TODO: explain them
-        self.settings.next_task = "S0"
+        self.settings.next_task = "S4_1"
         self.settings.refractory_period = 240 * 60
         self.settings.minimum_duration = 10 * 60
         self.settings.maximum_duration =  15 * 60
@@ -120,10 +120,10 @@ class TrainingProtocol(TrainingProtocolBase):
         self.settings.prob_right_values = [0.9]  
         self.settings.N_blocks = 100
         self.settings.mean_x = 30
-        self.settings.block_type = "fixed" 
+        self.settings.block_type = "exp" 
         self.settings.prob_block_type = 'permutation_prob_list'
         self.settings.prob_Left_Right_blocks = 'balanced'
-        self.settings.lambda_param = 0.5 #2 seconds
+        self.settings.lambda_param = 0.2 #5 seconds
 
     def update_training_settings(self) -> None:
         """
@@ -238,68 +238,25 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.next_task = "S4_0" 
             else:
                 self.settings.next_task = "S4_0" # Keep in task until it meets the criteria
-        
-        if self.last_task == "S4_1":
+
+        elif self.last_task in ["S4_1", "S4_1_patchcordHAB", "opto_all_iti"]:
+            self.settings.lambda_param = 0.2 # 5 seconds
             self.settings.next_task = "S4_1"
-
-        # elif self.last_task == "S4_1":
-        #     df_S4_1 = self.df[self.df.task == "S4_1"]
-        #     if len(df_S4_1) >= 3:
-        #         df_last_two_session_S4_1 = df_S4_1.iloc[-2:]
-        #         n_trials_S4_1 = df_last_two_session_S4_1.trial.sum()
-        #         if n_trials_S4_1 >= 250:
-        #             self.settings.next_task = "S4_2"
-        #             self.settings.minimum_duration = 30 * 60
-        #             self.settings.maximum_duration = 45 * 60
-        #             self.settings.volume = 2
-        #             self.settings.trials_with_same_side = 30
-        #             self.settings.c_led_on_time = 5 * 60 
-        #             self.settings.led_on_time = 5 * 60 
-        #             self.settings.penalty_time = 0
-        #             self.settings.drink_delay_time = 5
-
-        #             self.settings.prob_right_values = [0.9]  
-        #             self.settings.block_type = "exp" 
-        #             self.settings.prob_block_type = 'permutation_prob_list'
-        #             self.settings.prob_Left_Right_blocks = 'balanced'
-        #             self.settings.lambda_param = 0.25 #4 seconds
-        #         else:
-        #             self.settings.next_task = "S4_1" 
-        #     else:
-        #         self.settings.next_task = "S4_1" # Keep in this task until it meets the criteria
+            self.settings.minimum_duration = 45 * 60
+            self.settings.maximum_duration = 90 * 60
+            self.settings.trials_with_same_side = 30 
+            self.settings.c_led_on_time = 5 * 60 
+            self.settings.led_on_time = 5 * 60 
+            self.settings.penalty_time = 0
+            self.settings.drink_delay_time = 5
+            self.settings.prob_right_values = [0.9]  
+            self.settings.block_type = "exp" 
+            self.settings.prob_block_type = 'permutation_prob_list'
+            self.settings.prob_Left_Right_blocks = 'balanced'
+            self.settings.lambda_param = 0.2 # 5 seconds
 
         
-        # elif self.last_task == "S4_2":
-        #     df_S4_2 = self.df[self.df.task == "S4_2"]
-        #     if len(df_S4_2) >= 3:
-        #         df_last_two_session_S4_2 = df_S4_2.iloc[-2:]
-        #         n_trials_S4_2 = df_last_two_session_S4_2.trial.sum()
-        #         if n_trials_S4_2 >= 300:
-        #             self.settings.next_task = "S4_3"
-        #             self.settings.minimum_duration = 30 * 60
-        #             self.settings.maximum_duration = 45 * 60
-        #             self.settings.volume = 2
-        #             self.settings.trials_with_same_side = 30
-        #             self.settings.c_led_on_time = 5 * 60 
-        #             self.settings.led_on_time = 5 * 60 
-        #             self.settings.penalty_time = 0
-        #             self.settings.drink_delay_time = 5
 
-        #             self.settings.prob_right_values = [0.9, 0.8, 0.7, 0.6]  
-        #             self.settings.block_type = "exp" 
-        #             self.settings.prob_block_type = 'permutation_prob_list'
-        #             self.settings.prob_Left_Right_blocks = 'balanced'
-        #             self.settings.lambda_param = 0.2 #5 seconds
-        #         else:
-        #             self.settings.next_task = "S4_2" 
-        #     else:
-        #         self.settings.next_task = "S4_2" # Keep in this task until it meets the criteria
-
-        #if self.last_task == "S4_3":
-        #     self.settings.next_task = "S4_3"
-
-
-                
 
             
    
