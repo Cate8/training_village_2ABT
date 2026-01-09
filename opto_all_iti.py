@@ -95,7 +95,7 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.opto_onset = 0.5
 
         if 0.5 < self.random_iti <= 10:
-            if random_number <= 0.4:  # 40% of possibility
+            if random_number <= 0.36:  # 36% of trial between 0.5-10s ITI, opto on 25% of total trials
                 self.opto_bool = 1
                 self.duration_light = self.random_iti - self.opto_onset
                 print("----sending the pulse with duration: ", str(self.duration_light))
