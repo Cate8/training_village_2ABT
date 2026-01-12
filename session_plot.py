@@ -43,6 +43,8 @@ class SessionPlot(SessionPlotBase):
             return self.plot_S4(df, width, height)
         elif task == "S4_1_patchcordHAB":
             return self.plot_S4(df, width, height)
+        elif task == "opto_all_iti":
+            return self.plot_S4(df, width, height)
         elif task == "S4_2":
             return self.plot_S4(df, width, height)
         elif task == "S4_3":
