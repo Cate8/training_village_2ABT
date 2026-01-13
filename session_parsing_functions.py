@@ -226,4 +226,59 @@ def parse_S4_data(df: pd.DataFrame) -> pd.DataFrame:
 def probit(x, beta, alpha):
         # Probit function to generate the curve for the PC
         return 0.5 * (1 + erf((beta * x + alpha) / np.sqrt(2)))
+
+def parse_opto_all_iti_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Parse and compute all S4-related variables from raw trial dataframe."""
+    # Basic durations
+    df['trial_duration'] = df['TRIAL_END'] - df['TRIAL_START']
+    df['sum_s_trial_duration'] = df['trial_duration'].sum()
+    df['session_duration'] = df['sum_s_trial_duration'].iloc[0] / 60
+    df['prev_opto_trial'] = df['opto_trial'].shift(1)
+    df["prev_iti_duration"] = df["iti_duration"].shift(1)
+
+    df['fraction_of_correct_responses'] = np.where(
+    ((df['probability_r'] >= 0.5) & (df['response_side'] == "right")) |
+    ((df['probability_r'] < 0.5) & (df['response_side'] == "left")),
+    1, 0
+    )
     
+    
+    # Time parsing
+    df['STATE_drink_delay_START'] = df['STATE_drink_delay_START'].apply(extract_first_float)
+    df['STATE_drink_delay_END'] = df['STATE_drink_delay_END'].apply(extract_first_float)
+    df['STATE_c_led_on_START'] = df['STATE_c_led_on_START'].apply(extract_first_float)
+    df['STATE_c_led_on_END'] = df['STATE_c_led_on_END'].apply(extract_first_float)
+    df['STATE_side_led_on_START'] = df['STATE_side_led_on_START'].apply(extract_first_float)
+    df['STATE_side_led_on_END'] = df['STATE_side_led_on_END'].apply(extract_first_float)
+    df['STATE_water_delivery_START'] = df['STATE_water_delivery_START'].apply(extract_first_float)
+    df['STATE_water_delivery_END'] = df['STATE_water_delivery_END'].apply(extract_first_float)
+    df['STATE_penalty_START'] = df['STATE_penalty_START'].apply(extract_first_float)
+    df['STATE_penalty_END'] = df['STATE_penalty_END'].apply(extract_first_float)
+
+    # Durations and latencies
+    df['duration_drink_delay'] = df['STATE_drink_delay_END'] - df['STATE_drink_delay_START']
+    df['motor_time'] = df['STATE_side_led_on_END'] - df['STATE_side_led_on_START']
+    df['reaction_time'] = df['STATE_c_led_on_END'] - df['STATE_c_led_on_START']  # or water_delivery if appropriate
+
+    # Outcome
+    df["correct_outcome_bool"] = df["response_side"] == df['rewarded_side']
+    df['true_count'] = df['correct_outcome_bool'].value_counts().get(True, 0)
+    df["correct_outcome"] = np.where(df["response_side"] == df['rewarded_side'], "correct", "incorrect")
+    df["correct_outcome_int"] = np.where(df["response_side"] == df['rewarded_side'], 1, 0)
+
+    # Summary stats
+    df['reaction_time_median'] = df['reaction_time'].median()
+    df['tot_correct_choices'] = df['correct_outcome_int'].sum()
+    df['right_choices'] = (df['rewarded_side'] == 'right').sum()
+    df['left_choices'] = (df['rewarded_side'] == 'left').sum()
+    return df
+
+def get_on_off_masks(df, iti_min=0.5, iti_max=10.0):
+    on_mask = (df["prev_opto_trial"] == 1)
+
+    off_mask = (
+        (df["prev_opto_trial"] == 0) &
+        (df["prev_iti_duration"] >= iti_min) &
+        (df["prev_iti_duration"] <= iti_max)
+    )
+    return on_mask, off_mask
