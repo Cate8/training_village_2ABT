@@ -33,6 +33,7 @@ class ChangeCycle(ChangeCycleBase):
             days=self.days,
             safe=self.safe,
             backup_dir=self.backup_dir,
+            remote=True,
             remote_user=self.remote_user,
             remote_host=self.remote_host,
             port=self.port,
