@@ -322,6 +322,10 @@ class SessionPlot(SessionPlotBase):
     def plot_Opto_all_iti(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
         df = assign_ports(df)
         df = parse_opto_all_iti_data(df)
+        
+        subject_id = df["subject"].iloc[0]
+        group = get_subject_group(subject_id)
+
         # change the font in figure
         plt.rcParams.update({'font.size': 6, 'font.family': 'monospace'})
         # --- prepare the grid ---
@@ -361,7 +365,7 @@ class SessionPlot(SessionPlotBase):
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
-            f"Total trials: {n_trials} | Session: {session_duration_min} min | "
+            f"Subject: {subject_id} | Group: {group} | Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
             f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
         )

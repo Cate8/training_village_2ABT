@@ -1260,15 +1260,23 @@ def plot_psychometric_curve(df, ax=None):
 
 #     return ax
 
-import math
-import numpy as np
-import pandas as pd
-from matplotlib.patches import Patch
-from scipy.optimize import curve_fit
+
 
 # ---------------------------------------------------------
 # Helper: ON color depends on system_name
 # ---------------------------------------------------------
+def get_subject_group(subject_id: str) -> str:
+    controls = {"C15", "C24", "C22"}
+    egfp = {"C12", "C1", "C9", "C7"}
+
+    sid = str(subject_id).strip().upper()
+    if sid in controls:
+        return "CONTROL"
+    elif sid in egfp:
+        return "EGFP"
+    return "OPSIN"
+
+
 def get_on_color(df, col="system_name"):
     """
     Returns ON color based on df[col] (system_name).
