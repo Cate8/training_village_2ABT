@@ -189,6 +189,9 @@ def parse_S3_data(df: pd.DataFrame) -> pd.DataFrame:
 def parse_S4_data(df: pd.DataFrame) -> pd.DataFrame:
     """Parse and compute all S4-related variables from raw trial dataframe."""
     # Basic durations
+    if "response_side" not in df.columns and "c" in df.columns:
+        df = df.rename(columns={"c": "response_side"})
+
     df['trial_duration'] = df['TRIAL_END'] - df['TRIAL_START']
     df['sum_s_trial_duration'] = df['trial_duration'].sum()
     df['session_duration'] = df['sum_s_trial_duration'].iloc[0] / 60
