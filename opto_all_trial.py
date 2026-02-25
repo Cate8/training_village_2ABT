@@ -14,7 +14,7 @@ from utils_functions import (generate_uniform_block_duration,
 from BpodPorts import BpodPorts
 import time
 
-class S4_1(Task):
+class Opto_all_trial(Task):
 
     def __init__(self):
         super().__init__()
@@ -86,6 +86,22 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.block_identity = self.reward_side_vec_fixed_prob[self.current_trial-1][2]
         self.random_iti = self.random_iti_values[self.current_trial-1]
 
+        # OPTO Trial:
+        # it generates a random number between 0 and 1
+        random_number = random.random()
+        self.duration_light = 0
+        self.opto_onset = 0.5
+
+        if 0.5 < self.random_iti <= 10:
+            if random_number <= 1:  # 36% of trial between 0.5-10s ITI, opto on 25%
+                self.opto_bool = 1
+                self.duration_light = self.random_iti - self.opto_onset
+                print("----sending the pulse with duration: ", str(self.duration_light))
+            else:
+                self.opto_bool = 0
+        else:
+            self.opto_bool = 0
+
 
         print("current_trial: ", self.current_trial)
         print("block_identity: ", self.block_identity)
@@ -115,46 +131,169 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         print('Trial: ' + str(self.current_trial))
         print('Reward side: ' + str(self.correct_side))
 
-        self.bpod.add_state(
-            state_name='c_led_on',
-            state_timer= self.settings.c_led_on_time,
-            state_change_conditions={Event.Tup: 'drink_delay',
-                                    self.ports.center_poke: 'side_led_on'},
-            output_actions=[self.ports.LED_c_on]
-            )
+        if self.current_trial == 1:
 
-        self.bpod.add_state(
-            state_name='side_led_on',
-            state_timer= self.settings.led_on_time,
-            state_change_conditions={Event.Tup: 'drink_delay', 
-                                    self.correct_poke: 'water_delivery',
-                                    self.wrong_poke: 'penalty'
-                                    },
-
-            output_actions=[self.ports.LED_l_on, self.ports.LED_r_on]
-            )
-
-        self.bpod.add_state(
-            state_name='water_delivery',
-            state_timer= self.valvetime,
-            state_change_conditions={Event.Tup: 'drink_delay'},
-            output_actions=[self.valve_action]
-            )
+            self.bpod.add_state(
+                    state_name='c_led_on',
+                    state_timer= self.settings.c_led_on_time,
+                    state_change_conditions={Event.Tup: 'drink_delay',
+                                            self.ports.center_poke: 'side_led_on'},
+                    output_actions=[self.ports.LED_c_on]
+                    )
         
-        self.bpod.add_state(
-            state_name='penalty',
-            state_timer= self.settings.penalty_time,
-            state_change_conditions={Event.Tup: 'drink_delay'},
-            output_actions=[Output.SoftCode1]
+            self.bpod.add_state(
+                state_name='side_led_on',
+                state_timer= self.settings.led_on_time,
+                state_change_conditions={Event.Tup: 'drink_delay', 
+                                        self.correct_poke: 'water_delivery',
+                                        self.wrong_poke: 'penalty'
+                                        },
+
+                output_actions=[self.ports.LED_l_on, self.ports.LED_r_on]
+                )
+            
+
+            self.bpod.add_state(
+                state_name='water_delivery',
+                state_timer= self.valvetime,
+                state_change_conditions={Event.Tup: 'exit'},
+                output_actions=[self.valve_action]
+                )
+            
+            self.bpod.add_state(
+                state_name='penalty',
+                state_timer= self.settings.penalty_time,
+                state_change_conditions={Event.Tup: 'exit'},
+                output_actions=[Output.SoftCode1]
+                )
+
+            self.bpod.add_state(
+                state_name='drink_delay',
+                state_timer= self.duration_light,
+                state_change_conditions={Event.Tup: 'c_led_on'},
+                output_actions=[])
+    
+        
+        elif self.opto_bool == 1:  # opto trial
+            
+            self.bpod.add_state(
+                state_name='drink_delay',
+                state_timer= self.random_iti,
+                state_change_conditions={Event.Tup: 'c_led_on'},
+                output_actions=[Output.BNC1Low, Output.SoftCode3])
+            
+            self.bpod.add_state(
+                state_name='c_led_on',
+                state_timer=self.settings.c_led_on_time,
+                state_change_conditions={
+                    self.ports.center_poke: 'side_led_on',
+                    Event.Tup: 'center_off_omission'
+                },
+                output_actions=[self.ports.LED_c_on, Output.BNC1High, Output.SoftCode2]
+            )
+
+            # Se non fa center poke: spegni subito e vai dove vuoi (es. penalty o ITI)
+            self.bpod.add_state(
+                state_name='center_off_omission',
+                state_timer=0,
+                state_change_conditions={Event.Tup: 'exit'},   # oppure 'iti' / 'trial_end'
+                output_actions=[Output.BNC1Low, Output.SoftCode3]
+            )
+
+            # --- SIDE CHOICE WINDOW (laser ON, entrambi i LED ON) ---
+            self.bpod.add_state(
+                state_name='side_led_on',
+                state_timer=self.settings.led_on_time,
+                state_change_conditions={
+                    self.correct_poke: 'choice_off_correct',
+                    self.wrong_poke:   'choice_off_wrong',
+                    Event.Tup:         'choice_off_omission'
+                },
+                output_actions=[
+                    self.ports.LED_l_on, self.ports.LED_r_on,
+                    Output.BNC1High, Output.SoftCode2
+                ]
+            )
+
+            # Spegni subito dopo correct → water
+            self.bpod.add_state(
+                state_name='choice_off_correct',
+                state_timer=0.5,
+                state_change_conditions={Event.Tup: 'water_delivery'},
+                output_actions=[Output.BNC1Low, Output.SoftCode3]
+            )
+
+            # Spegni subito dopo wrong → penalty
+            self.bpod.add_state(
+                state_name='choice_off_wrong',
+                state_timer=0.5,
+                state_change_conditions={Event.Tup: 'penalty'},
+                output_actions=[Output.BNC1Low, Output.SoftCode3]
+            )
+
+            # Omission: spegni comunque (poi decidi dove andare)
+            self.bpod.add_state(
+                state_name='choice_off_omission',
+                state_timer=0.5,
+                state_change_conditions={Event.Tup: 'exit'},  
+                output_actions=[Output.BNC1Low, Output.SoftCode3]
             )
 
 
-        self.bpod.add_state(
-            state_name='drink_delay',
-            state_timer= self.random_iti,
-            state_change_conditions={Event.Tup: 'exit'},
-            output_actions=[])
+            self.bpod.add_state(
+                state_name='water_delivery',
+                state_timer= self.valvetime,
+                state_change_conditions={Event.Tup: 'exit'},
+                output_actions=[self.valve_action]
+                )
+            
+            self.bpod.add_state(
+                state_name='penalty',
+                state_timer= self.settings.penalty_time,
+                state_change_conditions={Event.Tup: 'exit'},
+                output_actions=[Output.SoftCode1]
+                )
+            
+        else:  # no opto trial
+            
+            self.bpod.add_state(
+                state_name='drink_delay',
+                state_timer= self.random_iti,
+                state_change_conditions={Event.Tup: 'c_led_on'},
+                output_actions=[Output.BNC1Low, Output.SoftCode3])
+            
+            self.bpod.add_state(
+                    state_name='c_led_on',
+                    state_timer= self.settings.c_led_on_time,
+                    state_change_conditions={Event.Tup: 'drink_delay',
+                                            self.ports.center_poke: 'side_led_on'},
+                    output_actions=[self.ports.LED_c_on, Output.BNC1Low, Output.SoftCode3]
+                    )
+            
+            self.bpod.add_state(
+                state_name='side_led_on',
+                state_timer= self.settings.led_on_time,
+                state_change_conditions={Event.Tup: 'drink_delay', 
+                                        self.correct_poke: 'water_delivery',
+                                        self.wrong_poke: 'penalty'
+                                        },
 
+                output_actions=[self.ports.LED_l_on, self.ports.LED_r_on, Output.BNC1Low, Output.SoftCode3]
+                )
+
+            self.bpod.add_state(
+                state_name='water_delivery',
+                state_timer= self.valvetime,
+                state_change_conditions={Event.Tup: 'drink_delay'},
+                output_actions=[self.valve_action]
+                )
+            
+            self.bpod.add_state(
+                state_name='penalty',
+                state_timer= self.settings.penalty_time,
+                state_change_conditions={Event.Tup: 'drink_delay'},
+                output_actions=[Output.SoftCode1]
+                )
 
     def after_trial(self):
   
@@ -227,9 +366,9 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.register_value('list_prob_R_values', self.settings.prob_right_values)
         self.register_value('outcome', outcome) # 'correct', 'incorrect', 'miss'
         self.register_value("rewarded_side", self.correct_side) # side that was rewarded this trial
-        self.register_value("c", chosen_side) # side the animal chose
         self.register_value("response_side", chosen_side) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
+        self.register_value('opto_trial', self.opto_bool)
 
         print("registration")
         print(f"  Rewarded side: {rewarded_side}")

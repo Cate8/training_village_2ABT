@@ -229,7 +229,7 @@ class TrainingProtocol(TrainingProtocolBase):
                     self.settings.led_on_time = 5 * 60 
                     self.settings.penalty_time = 0
                     self.settings.drink_delay_time = 5
-                    self.settings.prob_right_values = [0.9]  
+                    self.settings.prob_right_values = [0.9, 0.8]  
                     self.settings.block_type = "exp" 
                     self.settings.prob_block_type = 'permutation_prob_list'
                     self.settings.prob_Left_Right_blocks = 'balanced'
