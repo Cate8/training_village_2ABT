@@ -47,6 +47,9 @@ class SessionPlot(SessionPlotBase):
         elif task == "Opto_all_iti":
             print("entramos")
             return self.plot_Opto_all_iti(df, width, height)
+        elif task == "Opto_all_trial_L":
+            print("entramos")
+            return self.plot_Opto_all_iti(df, width, height)
         elif task == "S4_2":
             return self.plot_S4(df, width, height)
         elif task == "S4_3":
@@ -397,3 +400,4 @@ class SessionPlot(SessionPlotBase):
         plot_switch_rate_points_opto(ax9, df)
 
         return fig 
+

@@ -17,6 +17,8 @@ def function2():
 
 def function3():
     cam_box.annotation = ""
+
+
     
 
 

@@ -14,7 +14,7 @@ from utils_functions import (generate_uniform_block_duration,
 from BpodPorts import BpodPorts
 import time
 
-class Opto_all_trial(Task):
+class Opto_all_trial_bilateral(Task):
 
     def __init__(self):
         super().__init__()
@@ -36,6 +36,9 @@ PROBABILITIES = [0.9, 0.1, 0.8, 0.2]
 BLOCK TYPE = exponential,from 20 and 55 trials
 MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
 """
+        self.force_next_opto_off = False
+        self.opto_type = "bilateral"
+
     def start(self):
         self.side = random.choice(["left", "right"])
         # counters
@@ -86,21 +89,32 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.block_identity = self.reward_side_vec_fixed_prob[self.current_trial-1][2]
         self.random_iti = self.random_iti_values[self.current_trial-1]
 
-        # OPTO Trial:
-        # it generates a random number between 0 and 1
-        random_number = random.random()
-        self.duration_light = 0
-        self.opto_onset = 0.5
+        # -------------------------------------------------
+        # FORCE NEXT TRIAL NO-OPTO if previous trial had an omission
+        # -------------------------------------------------
+        if getattr(self, "force_next_opto_off", False):
+            # Force current trial to be a normal (no-opto) trial
+            self.opto_bool = 0
+            self.duration_light = 0
+            self.force_next_opto_off = False
+            print("----FORCING next trial to NO OPTO (because previous trial had omission)")
+        else:
+            # -------------------------------------------------
+            # NORMAL OPTO ASSIGNMENT (your original logic)
+            # -------------------------------------------------
+            random_number = random.random()
+            self.duration_light = 0
+            self.opto_onset = 0.5
 
-        if 0.5 < self.random_iti <= 10:
-            if random_number <= 1:  # 36% of trial between 0.5-10s ITI, opto on 25%
-                self.opto_bool = 1
-                self.duration_light = self.random_iti - self.opto_onset
-                print("----sending the pulse with duration: ", str(self.duration_light))
+            if 0.5 < self.random_iti <= 10:
+                if random_number <= 0.36:  # NOTE: this means 100% of eligible trials are opto
+                    self.opto_bool = 1
+                    self.duration_light = self.random_iti - self.opto_onset
+                    print("----sending the pulse with duration: ", str(self.duration_light))
+                else:
+                    self.opto_bool = 0
             else:
                 self.opto_bool = 0
-        else:
-            self.opto_bool = 0
 
 
         print("current_trial: ", self.current_trial)
@@ -174,102 +188,128 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
                 output_actions=[])
     
         
-        elif self.opto_bool == 1:  # opto trial
-            
+        elif self.opto_bool == 1:  # OPTO trial: laser ON until side response, no extra drink_delay on omission
+
+            # -----------------
+            # PARAMETERS
+            # -----------------
+            CENTER_WINDOW = getattr(self.settings, "center_window", 5.0)  # Max time to perform center poke
+            SIDE_WINDOW   = getattr(self.settings, "side_window",   5.0)  # Max time to perform side poke
+            OMIT_ON_TIME  = 1.0                                          # On omission: keep laser ON for 1 second
+
+            LASER_ON  = [Output.BNC1High, Output.SoftCode2]
+            LASER_OFF = [Output.BNC1Low,  Output.SoftCode3]
+
+            # -------------------------------------------------
+            # 1) ITI (drink_delay) — Laser ON (this is the ONLY drink_delay in the trial)
+            # -------------------------------------------------
             self.bpod.add_state(
                 state_name='drink_delay',
-                state_timer= self.random_iti,
+                state_timer=self.random_iti,
                 state_change_conditions={Event.Tup: 'c_led_on'},
-                output_actions=[Output.BNC1Low, Output.SoftCode3])
-            
+                output_actions=LASER_ON
+            )
+
+            # -------------------------------------------------
+            # 2) CENTER WINDOW — Laser ON
+            # -------------------------------------------------
+            # If center poke occurs → go to side window (laser still ON).
+            # If timeout → omission.
             self.bpod.add_state(
                 state_name='c_led_on',
-                state_timer=self.settings.c_led_on_time,
+                state_timer=CENTER_WINDOW,
                 state_change_conditions={
                     self.ports.center_poke: 'side_led_on',
-                    Event.Tup: 'center_off_omission'
+                    Event.Tup: 'omission_hold_on_1s'
                 },
-                output_actions=[self.ports.LED_c_on, Output.BNC1High, Output.SoftCode2]
+                output_actions=[self.ports.LED_c_on] + LASER_ON
             )
 
-            # Se non fa center poke: spegni subito e vai dove vuoi (es. penalty o ITI)
-            self.bpod.add_state(
-                state_name='center_off_omission',
-                state_timer=0,
-                state_change_conditions={Event.Tup: 'exit'},   # oppure 'iti' / 'trial_end'
-                output_actions=[Output.BNC1Low, Output.SoftCode3]
-            )
-
-            # --- SIDE CHOICE WINDOW (laser ON, entrambi i LED ON) ---
+            # -------------------------------------------------
+            # 3) SIDE WINDOW — Laser ON
+            # -------------------------------------------------
+            # If correct/wrong poke → turn laser OFF and go to outcome.
+            # If timeout → omission.
             self.bpod.add_state(
                 state_name='side_led_on',
-                state_timer=self.settings.led_on_time,
+                state_timer=SIDE_WINDOW,
                 state_change_conditions={
-                    self.correct_poke: 'choice_off_correct',
-                    self.wrong_poke:   'choice_off_wrong',
-                    Event.Tup:         'choice_off_omission'
+                    self.correct_poke: 'laser_off_then_water',
+                    self.wrong_poke:   'laser_off_then_penalty',
+                    Event.Tup:         'omission_hold_on_1s'
                 },
-                output_actions=[
-                    self.ports.LED_l_on, self.ports.LED_r_on,
-                    Output.BNC1High, Output.SoftCode2
-                ]
+                output_actions=[self.ports.LED_l_on, self.ports.LED_r_on] + LASER_ON
             )
 
-            # Spegni subito dopo correct → water
+            # -------------------------------------------------
+            # 4) Choice made — Laser OFF immediately, then outcome
+            # -------------------------------------------------
             self.bpod.add_state(
-                state_name='choice_off_correct',
+                state_name='laser_off_then_water',
                 state_timer=0.5,
                 state_change_conditions={Event.Tup: 'water_delivery'},
-                output_actions=[Output.BNC1Low, Output.SoftCode3]
+                output_actions=LASER_OFF
             )
 
-            # Spegni subito dopo wrong → penalty
             self.bpod.add_state(
-                state_name='choice_off_wrong',
+                state_name='laser_off_then_penalty',
                 state_timer=0.5,
                 state_change_conditions={Event.Tup: 'penalty'},
-                output_actions=[Output.BNC1Low, Output.SoftCode3]
+                output_actions=LASER_OFF
             )
 
-            # Omission: spegni comunque (poi decidi dove andare)
-            self.bpod.add_state(
-                state_name='choice_off_omission',
-                state_timer=0.5,
-                state_change_conditions={Event.Tup: 'exit'},  
-                output_actions=[Output.BNC1Low, Output.SoftCode3]
-            )
-
-
+            # -------------------------------------------------
+            # 5) Outcomes — Laser OFF
+            # -------------------------------------------------
             self.bpod.add_state(
                 state_name='water_delivery',
-                state_timer= self.valvetime,
+                state_timer=self.valvetime,
                 state_change_conditions={Event.Tup: 'exit'},
-                output_actions=[self.valve_action]
-                )
-            
+                output_actions=[self.valve_action] + LASER_OFF
+            )
+
             self.bpod.add_state(
                 state_name='penalty',
-                state_timer= self.settings.penalty_time,
+                state_timer=self.settings.penalty_time,
                 state_change_conditions={Event.Tup: 'exit'},
-                output_actions=[Output.SoftCode1]
-                )
-            
-        else:  # no opto trial
-            
+                output_actions=[Output.SoftCode1] + LASER_OFF
+            )
+
+            # -------------------------------------------------
+            # 6) Omission (center OR side) — keep laser ON for 1s, then OFF and EXIT
+            # -------------------------------------------------
+            # IMPORTANT: we do NOT go to another drink_delay here.
+            # We mark omission by ending in a dedicated end-state name,
+            # so Python can force next trial to be opto_bool = 0.
+            self.bpod.add_state(
+                state_name='omission_hold_on_1s',
+                state_timer=OMIT_ON_TIME,
+                state_change_conditions={Event.Tup: 'omission_laser_off_exit'},
+                output_actions=LASER_ON
+            )
+
+            self.bpod.add_state(
+                state_name='omission_laser_off_exit',
+                state_timer=0.5,
+                state_change_conditions={Event.Tup: 'exit'},
+                output_actions=LASER_OFF 
+            )
+        else: # NO OPTO: regular trial, as in trial 1, but without the initial center LED state
+
             self.bpod.add_state(
                 state_name='drink_delay',
                 state_timer= self.random_iti,
                 state_change_conditions={Event.Tup: 'c_led_on'},
-                output_actions=[Output.BNC1Low, Output.SoftCode3])
-            
+                output_actions=[])
+
             self.bpod.add_state(
                     state_name='c_led_on',
                     state_timer= self.settings.c_led_on_time,
                     state_change_conditions={Event.Tup: 'drink_delay',
                                             self.ports.center_poke: 'side_led_on'},
-                    output_actions=[self.ports.LED_c_on, Output.BNC1Low, Output.SoftCode3]
+                    output_actions=[self.ports.LED_c_on]
                     )
-            
+        
             self.bpod.add_state(
                 state_name='side_led_on',
                 state_timer= self.settings.led_on_time,
@@ -278,20 +318,21 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
                                         self.wrong_poke: 'penalty'
                                         },
 
-                output_actions=[self.ports.LED_l_on, self.ports.LED_r_on, Output.BNC1Low, Output.SoftCode3]
+                output_actions=[self.ports.LED_l_on, self.ports.LED_r_on]
                 )
+            
 
             self.bpod.add_state(
                 state_name='water_delivery',
                 state_timer= self.valvetime,
-                state_change_conditions={Event.Tup: 'drink_delay'},
+                state_change_conditions={Event.Tup: 'exit'},
                 output_actions=[self.valve_action]
                 )
             
             self.bpod.add_state(
                 state_name='penalty',
                 state_timer= self.settings.penalty_time,
-                state_change_conditions={Event.Tup: 'drink_delay'},
+                state_change_conditions={Event.Tup: 'exit'},
                 output_actions=[Output.SoftCode1]
                 )
 
@@ -355,6 +396,12 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         # --- REGISTRATION ---
         if t_choice is not None:
             self.register_value('first_trial_response_time', t_choice)
+        # -------------------------------------------------
+        # If this trial was an omission, force next trial to be NO OPTO
+        # -------------------------------------------------
+        if outcome == "omission":
+            self.force_next_opto_off = True
+            print("----OMISSION detected: forcing NEXT trial to NO OPTO")
 
         self.register_value('water', water)
         self.register_value('correct_poke', self.correct_poke)
@@ -369,6 +416,7 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.register_value("response_side", chosen_side) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
         self.register_value('opto_trial', self.opto_bool)
+        self.register_value('opto_type', self.opto_type)
 
         print("registration")
         print(f"  Rewarded side: {rewarded_side}")

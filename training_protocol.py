@@ -239,7 +239,7 @@ class TrainingProtocol(TrainingProtocolBase):
             else:
                 self.settings.next_task = "S4_0" # Keep in task until it meets the criteria
 
-        elif self.last_task in ["S4_1", "S4_1_patchcordHAB", "opto_all_iti"]:
+        elif self.last_task in ["S4_1", "S4_1_patchcordHAB", "opto_all_iti", "opto_all_trial_L", "opto_all_trial_R", "opto_all_trial_bilateral"]:
             self.settings.lambda_param = 0.2 # 5 seconds
             self.settings.next_task = "S4_1"
             self.settings.minimum_duration = 45 * 60
