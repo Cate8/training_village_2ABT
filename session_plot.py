@@ -365,7 +365,6 @@ class SessionPlot(SessionPlotBase):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         opto_trials = df['opto_trial'].sum()
-        opto_type = df['opto_type'].sum()
         percent_opto = ((opto_trials) / n_trials) * 100
         pct_correct = round(n_correct / n_trials * 100, 2)
         n_left = (df['response_side'] == 'left').sum()
@@ -375,7 +374,7 @@ class SessionPlot(SessionPlotBase):
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
-            f"Subject: {subject_id} | Group: {group} | Opto Hemisphere: {opto_type} | Total trials: {n_trials} | Session: {session_duration_min} min | "
+            f"Subject: {subject_id} | Group: {group} | Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
             f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
         )
@@ -444,7 +443,8 @@ class SessionPlot(SessionPlotBase):
                         
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
-        opto_trials = df['opto_trial'].unique()
+        opto_trials = df['opto_trial'].sum()
+        opto_type = df['opto_type'].unique()
         percent_opto = ((opto_trials) / n_trials) * 100
         pct_correct = round(n_correct / n_trials * 100, 2)
         n_left = (df['response_side'] == 'left').sum()
@@ -454,9 +454,9 @@ class SessionPlot(SessionPlotBase):
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
-                f"Subject: {subject_id} | Group: {group} | Total trials: {n_trials} | Session: {session_duration_min} min | "
-                f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-                f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
+        f"Subject: {subject_id} | Group: {group} | Opto Hemisphere: {opto_type} | Total trials: {n_trials}| "
+        f"Correct: {n_correct} ({pct_correct}%) | Session: {session_duration_min} min | "
+        f"Omissions: {n_omit} | Misses: {n_miss} | Opto trials: {opto_trials},({percent_opto})"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
@@ -535,9 +535,9 @@ class SessionPlot(SessionPlotBase):
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
-                f"Subject: {subject_id} | Group: {group} | Opto Hemisphere : {opto_type}  | Total trials: {n_trials} | Session: {session_duration_min} min | "
-                f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
-                f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
+        f"Subject: {subject_id} | Group: {group} | Opto Hemisphere : {opto_type}  | Total trials: {n_trials} |"
+        f"Correct: {n_correct} ({pct_correct}%) | Session: {session_duration_min} min | "
+        f"Omissions: {n_omit} | Misses: {n_miss} | Opto trials: {opto_trials},({percent_opto})"
         )
         ax0.axis("off")
         ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
