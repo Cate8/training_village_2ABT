@@ -49,10 +49,10 @@ class SessionPlot(SessionPlotBase):
             return self.plot_Opto_all_iti(df, width, height)
         elif task == "Opto_all_trial_L":
             print("entramos")
-            return self.plot_Opto_all_trial(df, width, height)
+            return self.plot_Opto_all_trial_lateralized(df, width, height)
         elif task == "Opto_all_trial_R":
             print("entramos")
-            return self.plot_Opto_all_trial(df, width, height)
+            return self.plot_Opto_all_trial_lateralized(df, width, height)
         elif task == "Opto_all_trial_bilateral":
             print("entramos")
             return self.plot_Opto_all_trial(df, width, height)
@@ -365,6 +365,7 @@ class SessionPlot(SessionPlotBase):
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
         opto_trials = df['opto_trial'].sum()
+        opto_type = df['opto_type'].sum()
         percent_opto = ((opto_trials) / n_trials) * 100
         pct_correct = round(n_correct / n_trials * 100, 2)
         n_left = (df['response_side'] == 'left').sum()
@@ -374,7 +375,7 @@ class SessionPlot(SessionPlotBase):
         rt_median = round(df['reaction_time'].median(), 2)
         session_duration_min = round(df['session_duration'].iloc[0], 1)
         summary_text = (
-            f"Subject: {subject_id} | Group: {group} | Total trials: {n_trials} | Session: {session_duration_min} min | "
+            f"Subject: {subject_id} | Group: {group} | Opto Hemisphere: {opto_type} | Total trials: {n_trials} | Session: {session_duration_min} min | "
             f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
             f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
         )
@@ -443,7 +444,7 @@ class SessionPlot(SessionPlotBase):
                         
         n_trials = len(df)
         n_correct = df['correct_outcome_int'].sum()
-        opto_trials = df['opto_trial'].sum()
+        opto_trials = df['opto_trial'].unique()
         percent_opto = ((opto_trials) / n_trials) * 100
         pct_correct = round(n_correct / n_trials * 100, 2)
         n_left = (df['response_side'] == 'left').sum()
@@ -485,4 +486,89 @@ class SessionPlot(SessionPlotBase):
         plot_switch_rate_points_opto_all_trial(ax9, df)
 
         return fig 
+
+    def plot_Opto_all_trial_lateralized(self, df: pd.DataFrame, width: float = 10, height: float = 8) -> Figure:
+        df = assign_ports(df)
+        df = parse_opto_all_trial_data(df)
+            
+        subject_id = df["subject"].iloc[0]
+        group = get_subject_group(subject_id)
+
+            # change the font in figure
+        plt.rcParams.update({'font.size': 6, 'font.family': 'monospace'})
+            # --- prepare the grid ---
+        fig = plt.figure(figsize=(width, height))
+
+            # esempio: 4 righe x 6 colonne
+        gs = gridspec.GridSpec(
+            4, 10, figure=fig,
+            height_ratios=[0, 2.1, 1.9, 1.6],
+            hspace=0.5,
+            wspace=0.5
+        )
+
+        ax0 = fig.add_subplot(gs[0, :])        # Summary (tutta la riga)
+            # --- Riga 1: 2 plot ---
+        ax1 = fig.add_subplot(gs[1, 0:7])       # First poke (molto largo)
+        ax6 = fig.add_subplot(gs[1, 7:10])      # Psychometric (più stretto)
+            # --- Riga 2: 5 plot (3 esistenti + 2 nuovi) ---
+        ax3 = fig.add_subplot(gs[2, 0:2])       # Trial progression
+        ax4 = fig.add_subplot(gs[2, 4:6])       # Reaction time / Latency
+        ax7 = fig.add_subplot(gs[2, 2:4])       # ITI histogram
+        ax8 = fig.add_subplot(gs[2, 6:8])       # NEW plot 1
+        ax9 = fig.add_subplot(gs[2, 8:10])      # NEW plot 2
+                
+            # --- Riga 3: Raster ---
+        ax5 = fig.add_subplot(gs[3, 0:7])     # raster
+        ax10 = fig.add_subplot(gs[3, 8:10])   # NEW delta ipsi
+                        
+        n_trials = len(df)
+        n_correct = df['correct_outcome_int'].sum()
+        opto_type = df['opto_type'].unique()
+        opto_trials = df['opto_trial'].sum()
+        percent_opto = ((opto_trials) / n_trials) * 100
+        pct_correct = round(n_correct / n_trials * 100, 2)
+        n_left = (df['response_side'] == 'left').sum()
+        n_right = (df['response_side'] == 'right').sum()
+        n_omit = (df['outcome'] == 'omission').sum()
+        n_miss = (df['outcome'] == 'miss').sum()
+        rt_median = round(df['reaction_time'].median(), 2)
+        session_duration_min = round(df['session_duration'].iloc[0], 1)
+        summary_text = (
+                f"Subject: {subject_id} | Group: {group} | Opto Hemisphere : {opto_type}  | Total trials: {n_trials} | Session: {session_duration_min} min | "
+                f"Correct: {n_correct} ({pct_correct}%) | Left: {n_left} | Right: {n_right} | "
+                f"Omissions: {n_omit} | Misses: {n_miss} | Median RT: {rt_median} s | Opto trials: {opto_trials},({percent_opto})"
+        )
+        ax0.axis("off")
+        ax0.text(0, 0.5, summary_text, fontsize=8, va='center', ha='left', family='monospace')
+                
+            # --- PLOT 1: First poke side by outcome ---
+        plot_probability_right_reward_opto(df, ax1)
+
+            # --- PLOT 2: Trial progression over time ---
+        plot_trial_progression(ax3, df)
+
+            # --- PLOT 3: Motor and Reaction time ---
+        plot_latency_to_first_poke_opto_all_trial(df, ax4)
+
+            # --- PLOT 5: lick raster and state machine ---
+        plot_lick_raster_with_states_opto(ax5, df, fig)
+                
+            # --- PLOT 6: PC right choice vs P(getting reward for the right side)  ---
+        plot_psychometric_curve_opto_all_trial(df, ax6)
+
+            # --- PLOT 7: histigram iti duration in the session  ---
+        plot_iti_histogram(ax7, df)
+
+            # --- PLOT 8: Barplot accuracy in the session  ---
+        plot_fraction_correct_points_opto_all_trial(ax8, df)
+
+            # --- PLOT 9: Switch rate ON vs OFF opto in the session ---
+        plot_switch_rate_points_opto_all_trial(ax9, df)
+
+            # --- PLOT 10: Delta ipsi (ipsi - contra) in the session ---
+        plot_delta_ipsi_session(ax10, df)
+
+        return fig 
+
 

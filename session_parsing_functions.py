@@ -281,8 +281,8 @@ def get_on_off_masks(df, iti_min=0.5, iti_max=10.0):
 
     off_mask = (
         (df["prev_opto_trial"] == 0) &
-        (df["prev_iti_duration"] >= iti_min) &
-        (df["prev_iti_duration"] <= iti_max)
+        (df["prev_iti_duration"] > iti_min) &
+        (df["prev_iti_duration"] < iti_max)
     )
     return on_mask, off_mask
 
@@ -291,8 +291,8 @@ def get_on_off_masks_opto_all_trial(df, iti_min=0.5, iti_max=10.0):
 
     off_mask = (
         (df["opto_trial"] == 0) &
-        (df["iti_duration"] >= iti_min) &
-        (df["iti_duration"] <= iti_max)
+        (df["iti_duration"] > iti_min) &
+        (df["iti_duration"] < iti_max)
     )
     return on_mask, off_mask
 
@@ -340,12 +340,3 @@ def parse_opto_all_trial_data(df: pd.DataFrame) -> pd.DataFrame:
     df['left_choices'] = (df['rewarded_side'] == 'left').sum()
     return df
 
-def get_on_off_masks(df, iti_min=0.5, iti_max=10.0):
-    on_mask = (df["prev_opto_trial"] == 1)
-
-    off_mask = (
-        (df["prev_opto_trial"] == 0) &
-        (df["prev_iti_duration"] >= iti_min) &
-        (df["prev_iti_duration"] <= iti_max)
-    )
-    return on_mask, off_mask

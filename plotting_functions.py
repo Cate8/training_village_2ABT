@@ -1817,9 +1817,6 @@ def plot_switch_rate_points_opto(ax, df):
     return ax
 
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 
 def plot_latency_to_first_poke_opto_all_trial(
     df,
@@ -2165,3 +2162,110 @@ def plot_switch_rate_points_opto_all_trial(ax, df):
     )
 
     return ax
+
+def compute_ipsi_delta_subject_level(
+    df,
+    subj_col="subject",
+    choice_col="response_side",          # cambia se necessario
+    hemi_col="opto_type",    # cambia se necessario
+):
+
+    d = df.copy()
+
+    # --- normalize strings ---
+    d[choice_col] = d[choice_col].astype(str).str.lower().str.strip()
+    d[hemi_col]   = d[hemi_col].astype(str).str.lower().str.strip()
+
+    def norm_side(x):
+        if x in ["L", "left"]:
+            return "left"
+        if x in ["R", "right"]:
+            return "right"
+        return np.nan
+
+    d["choice_lr"] = d[choice_col].apply(norm_side)
+    d["hemi_lr"]   = d[hemi_col].apply(norm_side)
+
+    d = d.dropna(subset=[subj_col, "choice_lr", "hemi_lr"]).copy()
+
+    # --- define ipsi ---
+    d["is_ipsi"] = (d["choice_lr"] == d["hemi_lr"]).astype(int)
+
+    # --- USE YOUR MASKS ---
+    on_mask, off_mask = get_on_off_masks_opto_all_trial(d)
+
+    results = []
+
+    for subj, ds in d.groupby(subj_col):
+
+        ds_on  = ds.loc[on_mask.loc[ds.index]]
+        ds_off = ds.loc[off_mask.loc[ds.index]]
+
+        if len(ds_on) == 0 or len(ds_off) == 0:
+            continue
+
+        p_on  = ds_on["is_ipsi"].mean()
+        p_off = ds_off["is_ipsi"].mean()
+
+        results.append({
+            "subject": subj,
+            "p_ipsi_ON": p_on,
+            "p_ipsi_OFF": p_off,
+            "delta_p_ipsi_ON_minus_OFF": p_on - p_off,
+            "n_ON": len(ds_on),
+            "n_OFF": len(ds_off)
+        })
+
+    return pd.DataFrame(results)
+
+def plot_delta_ipsi_session(ax, df):
+
+    # usa le tue maschere ufficiali
+    on_mask, off_mask = get_on_off_masks_opto_all_trial(df)
+
+    # normalizza lati
+    choice = df["response_side"].astype(str).str.lower()
+    hemi   = df["opto_type"].astype(str).str.lower()
+
+    def norm(x):
+        if x in ["L", "left"]:
+            return "left"
+        if x in ["R", "right"]:
+            return "right"
+        return np.nan
+
+    choice = choice.map(norm)
+    hemi   = hemi.map(norm)
+
+    valid = choice.notna() & hemi.notna()
+    choice = choice[valid]
+    hemi   = hemi[valid]
+
+    # ipsi
+    is_ipsi = (choice == hemi).astype(int)
+
+    # allineiamo le maschere agli indici validi
+    on  = on_mask[valid]
+    off = off_mask[valid]
+
+    if on.sum() == 0 or off.sum() == 0:
+        ax.text(0.5, 0.5, "No ON/OFF", ha="center")
+        ax.axis("off")
+        return
+
+    p_on  = is_ipsi[on].mean()
+    p_off = is_ipsi[off].mean()
+    delta = p_on - p_off
+
+    # ---- PLOT ----
+    ax.axhline(0, color="black", lw=1)
+    ax.scatter(0, delta, color="black", s=25)
+
+    ax.set_xlim(-0.5, 0.5)
+    ax.set_xticks([])
+    ax.set_ylabel("Δ ipsi (On - Off)")
+    ax.set_title("Ipsi bias")
+
+    # clean style
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
