@@ -192,8 +192,8 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
             # -----------------
             # PARAMETERS
             # -----------------
-            CENTER_WINDOW = getattr(self.settings, "center_window", 5.0)  # Max time to perform center poke
-            SIDE_WINDOW   = getattr(self.settings, "side_window",   5.0)  # Max time to perform side poke
+            CENTER_WINDOW = getattr(self.settings, "center_window", 15.0)  # Max time to perform center poke
+            SIDE_WINDOW   = getattr(self.settings, "side_window",   15.0)  # Max time to perform side poke
             OMIT_ON_TIME  = 1.0                                          # On omission: keep laser ON for 1 second
 
             LASER_ON  = [Output.BNC1High, Output.SoftCode2]
