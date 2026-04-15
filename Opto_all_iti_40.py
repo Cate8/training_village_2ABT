@@ -14,7 +14,7 @@ from utils_functions import (generate_uniform_block_duration,
 from BpodPorts import BpodPorts
 import time
 
-class Opto_all_iti_1(Task):
+class Opto_all_iti_40(Task):
 
 
     def __init__(self):
