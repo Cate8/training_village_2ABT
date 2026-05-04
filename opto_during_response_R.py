@@ -36,6 +36,8 @@ PROBABILITIES = [0.9, 0.1, 0.8, 0.2]
 BLOCK TYPE = exponential,from 20 and 55 trials
 MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
 """
+        self.opto_type = "right"
+
     def start(self):
         self.side = random.choice(["left", "right"])
         # counters
@@ -308,6 +310,8 @@ MEAN ITI DISTRIBUTION = 3 seconds UP TO 30 seconds
         self.register_value("response_side", chosen_side) # side the animal chose
         self.register_value('iti_duration', self.random_iti)
         self.register_value('opto_trial', self.opto_bool)
+        self.register_value('opto_type', self.opto_type)
+
 
         print("registration")
         print(f"  Rewarded side: {rewarded_side}")

@@ -50,6 +50,9 @@ class SessionPlot(SessionPlotBase):
         elif task == "Opto_all_iti_40":
             print("entramos")
             return self.plot_Opto_all_iti(df, width, height)
+        elif task == "S4_5_third_condition":
+            print("entramos")
+            return self.plot_Opto_all_iti(df, width, height)
         elif task == "Opto_during_response_L":
             print("entramos")
             return self.plot_Opto_all_trial_lateralized(df, width, height)
