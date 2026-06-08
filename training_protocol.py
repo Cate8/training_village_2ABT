@@ -253,7 +253,7 @@ class TrainingProtocol(TrainingProtocolBase):
             self.settings.block_type = "exp" 
             self.settings.prob_block_type = 'permutation_prob_list'
             self.settings.prob_Left_Right_blocks = 'balanced'
-            self.settings.lambda_param = 0.2 # 5 seconds
+
 
         
 
